@@ -1,4 +1,4 @@
-# Let Them Live - Social Madia Automation
+# Let Them Live - Social Media Automation
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
