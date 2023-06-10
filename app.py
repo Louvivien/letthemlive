@@ -34,6 +34,15 @@ def instagrapi_message(username, password):
     # Get the user id of louvivien
     print("Getting user ID...")
     user_id = client.user_id_from_username('louvivien')
+                                # # Follow user if not already following, you need this to send messages
+                                # result = client.user_follow(user_id)
+                                # # Check if the follow was successful
+                                # if result == True:
+                                #     print('Followed successfully')
+                                # else:
+                                #     print('Follow failed')
+
+
     print("User found")                      
 
     # Send a direct message
