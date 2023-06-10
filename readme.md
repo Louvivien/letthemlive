@@ -68,6 +68,12 @@ If the script is not working as expected, check the following:
 - Make sure the API keys are correct.
 - Check the console for any error messages.
 
+## Ongoing work
+
+I try to plug autogpt to instagram. I have a problem, you can see it in problem.txt. I interupted the script it could keep running like this for hours. Autogpt should know how to reply to instagram and wait for the response. 
+
+
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
