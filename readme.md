@@ -70,7 +70,7 @@ If the script is not working as expected, check the following:
 
 ## Ongoing work
 
-I try to plug autogpt to instagram. I have a problem, you can see it in problem.txt. I interupted the script it could keep running like this for hours. Autogpt should know how to reply to instagram and wait for the response. 
+Autogpt, langchain and autogpt are now plugged together. The conversation is not optimized though. See lastconversation.txt
 
 
 

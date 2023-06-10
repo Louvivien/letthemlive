@@ -156,6 +156,7 @@ if __name__ == "__main__":
     
     # Get the reply from the Instagram user
     reply = instagrapi_message(username, password)
+    goal2 = "User's reply :"+reply
 
     # If there is no reply after 3 attempts, tell AutoGPT to wait for one hour
     if reply is None:
@@ -163,5 +164,5 @@ if __name__ == "__main__":
         time.sleep(3600)  # wait for one hour
         reply = instagrapi_message(username, password)
 
-    # Run AutoGPT with the goal and the reply
-    run_autogpt(goal, reply)
+    # Run AutoGPT with the goal and the reply (as a second goal)
+    run_autogpt(goal, goal2)
