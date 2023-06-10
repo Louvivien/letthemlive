@@ -1,4 +1,4 @@
-# Let Them Live - Instagram Automation
+# Let Them Live - Social Madia Automation
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -9,7 +9,7 @@
   <h3 align="center">Let Them Live</h3>
 
   <p align="center">
-    An Instagram automation script for the Let Them Live project.
+    A social media automation script for the Let Them Live project.
     <br />
     <a href="https://github.com/Louvivien/letthemlive"><strong>Explore the docs »</strong></a>
     <br />
