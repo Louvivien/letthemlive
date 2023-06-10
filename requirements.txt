@@ -1,2 +1,7 @@
 instagrapi
 python-dotenv
+instagrapi
+langchain
+faiss-cpu
+lark
+google-search-results

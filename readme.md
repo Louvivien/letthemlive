@@ -65,7 +65,7 @@ This script logs into Instagram using the provided username and password, finds 
 If the script is not working as expected, check the following:
 
 - Make sure your Instagram username and password are correct and the account is not locked or restricted.
-- Make sure the Chrome driver path is correct and the driver version matches your Chrome browser version.
+- Make sure the API keys are correct.
 - Check the console for any error messages.
 
 ## Contributing
