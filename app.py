@@ -204,11 +204,14 @@ def run_autogpt(goal, username, password):
                 func=instagram_tool.receive_message,
                 description="Tool for receiving messages from a user on Instagram."
             ),
-            Tool(
-                name="instagram_follow",
-                func=instagram_tool.follow_users,
-                description="Tool for following users on Instagram related to a specific topic."
-            ),
+
+            # Tool(
+            #     name="instagram_follow",
+            #     func=instagram_tool.follow_users,
+            #     description="Tool for following users on Instagram related to a specific topic."
+            # ),
+
+            
             # Tool(
             #     name="replicate_train",
             #     func=replicate_tool.train_model,
