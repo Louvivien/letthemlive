@@ -107,6 +107,13 @@ class InstagramTool:
         print("No reply received after 3 attempts.")
         return "No reply received yet. Suggest checking again in one hour."
     
+
+    # def make_post():
+    #         # Create this function
+    #        # Ask chatGPT to create this function using this: https://github.com/adw0rd/instagrapi
+       
+       
+    
     def follow_users(self, topic):
         # Check if the follow limit has been reached
         if self.follow_count >= self.MAX_FOLLOW_PER_DAY:
@@ -151,8 +158,10 @@ class InstagramTool:
 #     def __init__():
         
 #     def train_model():
+# You can ask Chat GPT to create this from /letthemlive/DreamBooth_train_model.py
 
 #     def generate_image():
+# You can ask Chat GPT to create this from /letthemlive/DreamBooth_generate_image.py
   
     
     
@@ -211,7 +220,13 @@ def run_autogpt(goal, username, password):
             #     description="Tool for following users on Instagram related to a specific topic."
             # ),
 
-            
+            # Tool(
+            #     name="instagram_make_post",
+            #     func=instagram_tool.make_post
+            #     description="Tool for making a post on Instagram"
+            # ),
+
+
             # Tool(
             #     name="replicate_train",
             #     func=replicate_tool.train_model,
@@ -252,6 +267,7 @@ if __name__ == "__main__":
 
     # Set your goal as a natural language string
     goal = "Engage in a conversation with an Instagram user"
+    # When adding methods we need to update this prompt to be more general
 
     # Run AutoGPT with the goal
     run_autogpt(goal, username, password)

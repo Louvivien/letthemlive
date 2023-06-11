@@ -18,7 +18,8 @@ MODEL_NAME = "louvivien/nathalie"
 VERSION_ID = "3e0a1a4286c8cbe6eeaf0bd5a91a2427b0b208f1cd3ddbaa5f73b927424802c2"
 
 # Run your trained model
-run_input = {"prompt": "photo of a girl horse riding"}
+print("Running model...")
+run_input = {"prompt": "selfy of Nathalie in her bathroom"}
 model_version = f"{MODEL_NAME}:{VERSION_ID}"
 result = replicate.run(model_version, input=run_input)
 print(result)
