@@ -71,6 +71,8 @@ If the script is not working as expected, check the following:
 The integration of AutoGPT, LangChain, and Instagram is complete. It can engage in a conversation, follow user based on a topic. 
 We will add some other methods in instagram and add other social media. 
 
+Currently adding method to generate images with DeamBooth model and StyleGAN2-ADA model
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
