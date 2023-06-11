@@ -3,6 +3,7 @@ import time
 from dotenv import load_dotenv
 from instagrapi import Client
 from instagrapi.exceptions import ClientError
+from instagrapi.exceptions import LoginRequired
 from langchain.utilities import SerpAPIWrapper
 from langchain.agents import Tool
 from langchain.tools.file_management.write import WriteFileTool
@@ -20,16 +21,41 @@ def load_env():
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     load_dotenv(dotenv_path)
 
-
 # Function to message a user on Instagram
-def instagrapi_message(username, password):
+def instagrapi_message(username, password, proxy=None):
     print("Initializing Instagram client...")
     # Create a client object
     client = Client()
+
+    # Set a random delay between 1 and 3 seconds after each request
+    client.delay_range = [1, 3]
+    
+    # Load session from file if it exists
+    session_file = f"{username}_session.json"
+    if os.path.exists(session_file):
+        client.load_settings(session_file)
+        print("Session loaded from file")
+    
     # Login to Instagram
     print("Logging in to Instagram...")
-    client.login(username, password)
-    print('Logged in')
+    try:
+        client.login(username, password)
+        print('Logged in')
+    except LoginRequired:
+        print("Session expired. Logging in again...")
+        client.login(username, password)
+        print('Logged in')
+    
+    # Save session to file
+    client.dump_settings(session_file)
+    print("Session saved to file")
+    
+    # Set proxy if provided
+    if proxy:
+        print("Setting up proxy...")
+        client.set_proxy(proxy)
+        # http://<api_key>:wifi;ca;;;toronto@proxy.soax.com:9137
+        print("Proxy set up")
 
     # Get the user id of louvivien
     print("Getting user ID...")
@@ -41,13 +67,11 @@ def instagrapi_message(username, password):
                                 #     print('Followed successfully')
                                 # else:
                                 #     print('Follow failed')
-
-
     print("User found")                      
 
     # Send a direct message
     print("Sending message...")                      
-    message = 'Hello, this is a test message using instagrapi and autogpt'
+    message = 'Hello, this is Tom, how are you?'
     try:
         result = client.direct_send(message, user_ids=[user_id])
         print('Message sent successfully')
@@ -64,6 +88,7 @@ def instagrapi_message(username, password):
         # Wait for the user to reply
         print("Waiting for reply...")
         for _ in range(3):  # try 3 times
+            client.delay_range = [27, 30]
             # Refresh the thread
             thread = client.direct_thread(thread_id)
 
@@ -80,17 +105,27 @@ def instagrapi_message(username, password):
                 return message.text  # Return the text of the last received message
             else:
                 print("No reply received yet. Waiting again...")
-                time.sleep(60)  # wait for another 60 seconds
+                client.delay_range = [57, 60] # wait for another 60 seconds
         print("No reply received after 3 attempts.")
         return None
     except ClientError as e:
         print('Message failed')
         print(e)
 
+
+
 class InstagramTool:
     def __init__(self, username, password):
         self.client = Client()
-        self.client.login(username, password)
+        self.client.delay_range = [1, 3]
+        session_file = f"{username}_session.json"
+        if os.path.exists(session_file):
+            self.client.load_settings(session_file)
+        try:
+            self.client.login(username, password)
+        except LoginRequired:
+            self.client.login(username, password)
+        self.client.dump_settings(session_file)
         self.user_id = self.client.user_id_from_username('louvivien')
 
     def send_message(self, message):
@@ -101,9 +136,13 @@ class InstagramTool:
         return last_message_id, thread_id
 
     def receive_message(self, last_message_id, thread_id):
+        self.client.delay_range = [27, 30]
         thread = self.client.direct_thread(thread_id)
         new_messages = [m for m in thread.messages if m.id > last_message_id]
+        if not new_messages:
+            self.client.delay_range = [57, 60]
         return new_messages
+
 
 
 def run_autogpt(goal, reply):
