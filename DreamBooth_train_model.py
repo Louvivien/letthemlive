@@ -30,20 +30,20 @@ headers = {
 # Zip your data folder
 print("Zipping data folder and uploading to Replicate...")
 def zip_data_folder(folder_name):
-    zipf = zipfile.ZipFile('Dreambooth_data.zip', 'w', zipfile.ZIP_DEFLATED)
+    zipf = zipfile.ZipFile('Training_data.zip', 'w', zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(folder_name):
         for file in files:
             zipf.write(os.path.join(root, file))
     zipf.close()
 
-zip_data_folder('Dreambooth_data')
+zip_data_folder('Training_data')
 
 # Upload the data file
 print("Uploading data file to Replicate...")
 upload_url = "https://dreambooth-api-experimental.replicate.com/v1/upload/data.zip"
 response = requests.post(upload_url, headers=headers)
 upload_url = response.json()["upload_url"]
-with open("Dreambooth_data.zip", 'rb') as data_file:
+with open("Training_data.zip", 'rb') as data_file:
     requests.put(upload_url, headers={"Content-Type": "application/zip"}, data=data_file)
 SERVING_URL = response.json()["serving_url"]
 

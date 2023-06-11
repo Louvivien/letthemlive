@@ -1,74 +1,35 @@
-# Import the necessary libraries
+import os
+import pickle
 import numpy as np
-import tensorflow as tf
 import PIL.Image
-import sys
 import dnnlib
 import dnnlib.tflib as tflib
+import config
 
-
-# Define the function to convert a latent vector to an image
-def generate_image(latent_vector):
-    # Load the pre-trained StyleGAN2-ADA model
+def main():
+    # Initialize TensorFlow.
     tflib.init_tf()
-    url = "https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada/pretrained/ffhq.pkl"
-    with dnnlib.util.open_url(url) as f:
-        generator_network, discriminator_network, Gs_network = pickle.load(f)
-    
-    # Generate the image from the latent vector
+
+    # Load pre-trained network.
+    url = 'http://d36zk2xti64re0.cloudfront.net/stylegan2/networks/stylegan2-ffhq-config-f.pkl' # URL or path to your pkl file
+    with dnnlib.util.open_url(url, cache_dir=config.cache_dir) as f:
+        _G, _D, Gs = pickle.load(f)
+        # _G = Instantaneous snapshot of the generator. Mainly useful for resuming a previous training run.
+        # _D = Instantaneous snapshot of the discriminator. Mainly useful for resuming a previous training run.
+        # Gs = Long-term average of the generator. Yields higher-quality results than the instantaneous snapshot.
+
+    # Pick latent vector.
+    rnd = np.random.RandomState(5) # Choose a random state for variability in generated images
+    latents = rnd.randn(1, Gs.input_shape[1])
+
+    # Generate image.
     fmt = dict(func=tflib.convert_images_to_uint8, nchw_to_nhwc=True)
-    image = Gs_network.components.synthesis.run(latent_vector, randomize_noise=False, output_transform=fmt)
-    
-    # Return the image as a PIL object
-    return PIL.Image.fromarray(image[0], 'RGB')
+    images = Gs.run(latents, None, truncation_psi=0.7, randomize_noise=True, output_transform=fmt)
 
-# Define the function to modify a latent vector with some prompts
-def modify_latent_vector(latent_vector, prompts):
-    # Load the pre-trained CLIP model
-    import clip
-    clip_model, clip_preprocess = clip.load("ViT-B/32", device="cpu")
-    
-    # Convert the prompts to a tensor of embeddings
-    prompts_tensor = clip.tokenize(prompts).to("cpu")
-    prompts_embeddings = clip_model.encode_text(prompts_tensor).float()
-    
-    # Calculate the direction of the prompts in the latent space
-    direction = prompts_embeddings @ latent_vector.T
-    
-    # Apply a small step in the direction of the prompts to the latent vector
-    step = 0.01
-    new_latent_vector = latent_vector + step * direction
-    
-    # Return the modified latent vector
-    return new_latent_vector
+    # Save image.
+    os.makedirs(config.result_dir, exist_ok=True)
+    png_filename = os.path.join(config.result_dir, 'example.png')
+    PIL.Image.fromarray(images[0], 'RGB').save(png_filename)
 
-# Use a fixed latent vector instead of a random one
-latent_vector = np.array([[-0.72621244, -1.1579906 , -0.14630723, -0.92453134,  0.32649288,
-        -0.29942167, -0.40940762,  1.2587606 , -1.0881207 ,  0.12000763,
-         0.61720324, -0.30343688, -1.1601564 , -1.2773438 , -1.0263672 ,
-         0.3955078 ,  1.09375   , -1.1572266 , -0.5830078 , -1.1572266 ,
-         0.5839844 , -0.5839844 ,  1.1572266 , -1.09375   ,  0.5830078 ,
-        -1.1572266 ,  1.1572266 , -0.5830078 , -1.1572266 ,  0.5830078 ,
-         1.1572266 , -1.09375   , -0.5830078 ,  1.1572266 , -1.1572266 ,
-         0.5830078 ,  1.1572266 , -1.09375   , -0.5830078 ,  1.1572266 ,
-        -1.1572266 ,  0.5830078 ,  1.1572266 , -1.09375   , -0.5830078 ,
-         1.1572266 , -1.1572266 ,  0.5830078 ,  1.1572266 , -1.09375   ,
-        -0.5830078 ,  1.1572266 , -1.1572266 ,  0.5830078 ,  1.1572266 ,
-        -1.09375   , -0.5830078 ,  1.1572266 , -1.1572266 ,  0.5830078 ,
-         1.1572266 , -1.09375   ]])
-
-# Generate an image from the latent vector
-image = generate_image(latent_vector)
-
-# Display the image
-image.show()
-
-# Modify the latent vector with some prompts
-prompts = "blonde hair, blue eyes, sunglasses"
-new_latent_vector = modify_latent_vector(latent_vector, prompts)
-
-# Generate a new image from the modified latent vector
-new_image = generate_image(new_latent_vector)
-
-# Display the new image
-new_image.show()
+if __name__ == "__main__":
+    main()
