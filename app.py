@@ -14,6 +14,9 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.experimental import AutoGPT
 from langchain.chat_models import ChatOpenAI
 import faiss
+from datetime import datetime, timedelta
+import random
+
 
 # Load .env file
 def load_env():
@@ -24,6 +27,9 @@ def load_env():
 
 # Function to message a user on Instagram
 class InstagramTool:
+    MAX_FOLLOW_PER_DAY = 150
+
+
     def __init__(self, username, password, proxy=None):
         print("Initializing Instagram client...")
         self.client = Client()
@@ -52,6 +58,9 @@ class InstagramTool:
         # Initialize last_message_id and thread_id as None
         self.last_message_id = None
         self.thread_id = None
+        # Initialize follow count
+        self.follow_count = 0
+        self.follow_reset_time = datetime.now() + timedelta(days=1)
 
     def send_message(self, message):
         print("Sending message...")
@@ -97,8 +106,45 @@ class InstagramTool:
 
         print("No reply received after 3 attempts.")
         return "No reply received yet. Suggest checking again in one hour."
+    
+    def follow_users(self, topic):
+        # Check if the follow limit has been reached
+        if self.follow_count >= self.MAX_FOLLOW_PER_DAY:
+            print("Follow limit is reached for today. Can't proceed. Try again tomorrow.")
+            return
 
+        # Check if the follow count should be reset
+        if datetime.now() >= self.follow_reset_time:
+            print("Resetting follow count for the new day.")
+            self.follow_count = 0
+            self.follow_reset_time = datetime.now() + timedelta(days=1)
 
+        print("Searching for users related to the topic...")
+        try:
+            users = self.client.search_users(topic, count=50)  # Search for 50 users related to the topic
+            print(f"Found {len(users)} users related to {topic}")
+        except ClientError as e:
+            print(f"Failed to search users: {e}")
+            return
+
+        for user in users:
+            # Check if the follow limit has been reached
+            if self.follow_count >= self.MAX_FOLLOW_PER_DAY:
+                print("Follow limit is reached for today. Can't proceed. Try again tomorrow.")
+                return
+
+            try:
+                print(f"Following user {user.username}...")
+                self.client.user_follow(user.pk)  # Follow the user
+                self.follow_count += 1  # Increment the follow count
+                print(f"Followed user {user.username}")
+                time.sleep(random.uniform(2, 4))  # Random delay to mimic human behavior and avoid rate limits
+            except ClientError as e:
+                print(f"Failed to follow user {user.username}: {e}")
+
+        print("Finished following users.")
+
+        
 def run_autogpt(goal, username, password):
     print("Setting up tools for AutoGPT")
     # Set up tools for AutoGPT
@@ -108,27 +154,47 @@ def run_autogpt(goal, username, password):
     # Create an instance of InstagramTool
     instagram_tool = InstagramTool(username, password)
 
+    print("Retrieving Instagram profile information...")
+    try:
+        profile_info = instagram_tool.client.user_info(instagram_tool.client.user_id)
+        print("Profile information retrieved successfully")
+        print("Profile info : ", profile_info)
+    except Exception as e:
+        print(f"Failed to retrieve profile information: {e}")
+        return
+
+    # Set the AI name and role based on the Instagram profile information
+    ai_name = profile_info.full_name
+    if profile_info.biography:
+        ai_role = f"This is your bio: {profile_info.biography}. Act as if you were this person, never say that you are an AI."
+    else:
+        ai_role = "This is your bio: I am a passionate individual who loves to engage with people and share my thoughts. Act as if you were this person, never say that you are an AI."
 
     # Add the send_message and receive_message methods as separate tools
     tools = [
-        Tool(
-            name="search",
-            func=search.run,
-            description="usefulfor when you need to answer questions about current events. You should ask targeted questions"
-        ),
-        WriteFileTool(),
-        ReadFileTool(),
-        Tool(
-            name="instagram_send",
-            func=instagram_tool.send_message,
-            description="Tool for sending messages to a user on Instagram."
-        ),
-        Tool(
-            name="instagram_receive",
-            func=instagram_tool.receive_message,
-            description="Tool for receiving messages from a user on Instagram."
-        ),
-    ]
+            Tool(
+                name="search",
+                func=search.run,
+                description="useful for when you need to answer questions about current events. You should ask targeted questions"
+            ),
+            WriteFileTool(),
+            ReadFileTool(),
+            Tool(
+                name="instagram_send",
+                func=instagram_tool.send_message,
+                description="Tool for sending messages to a user on Instagram."
+            ),
+            Tool(
+                name="instagram_receive",
+                func=instagram_tool.receive_message,
+                description="Tool for receiving messages from a user on Instagram."
+            ),
+            Tool(
+                name="instagram_follow",
+                func=instagram_tool.follow_users,
+                description="Tool for following users on Instagram related to a specific topic."
+            ),
+        ]
 
     # Set up memory for AutoGPT
     embeddings_model = OpenAIEmbeddings()
@@ -138,8 +204,8 @@ def run_autogpt(goal, username, password):
 
     # Set up model and AutoGPT
     agent = AutoGPT.from_llm_and_tools(
-        ai_name="Tom",
-        ai_role="Assistant. Do not say that you are an AI",
+        ai_name=ai_name,
+        ai_role=ai_role,
         tools=tools,
         llm=ChatOpenAI(temperature=0),
         memory=vectorstore.as_retriever()
@@ -161,3 +227,5 @@ if __name__ == "__main__":
 
     # Run AutoGPT with the goal
     run_autogpt(goal, username, password)
+
+

@@ -68,7 +68,8 @@ If the script is not working as expected, check the following:
 
 ## Ongoing work
 
-The integration of AutoGPT, LangChain, and Instagram is complete. The conversation flow is currently being optimized. See `lastconversation.txt` for the latest conversation. We will add some other methods in instagram and add other social media. 
+The integration of AutoGPT, LangChain, and Instagram is complete. It can engage in a conversation, follow user based on a topic. 
+We will add some other methods in instagram and add other social media. 
 
 ## Contributing
 
