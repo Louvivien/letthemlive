@@ -18,7 +18,7 @@ REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
 # Set your model name
 MODEL_NAME = "louvivien/nathalie"
 
-# # Set your version ID
+# Set your version ID
 VERSION_ID = "a8ba568da0313951a6b311b43b1ea3bf9f2ef7b9fd97ed94cebd7ffd2da66654"
 
 # Set the headers for the API requests
