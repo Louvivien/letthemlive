@@ -89,6 +89,7 @@ def run_autogpt(goal, username, password):
     # Create an instance of InstagramTool
     instagram_tool = InstagramTool(username, password)
 
+
     # Add the send_message and receive_message methods as separate tools
     tools = [
         Tool(
