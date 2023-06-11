@@ -9,7 +9,7 @@
   <h3 align="center">Let Them Live</h3>
 
   <p align="center">
-    A social media automation script for the Let Them Live project.
+    A social media automation script for the Let Them Live project, powered by AutoGPT and LangChain.
     <br />
     <a href="https://github.com/Louvivien/letthemlive"><strong>Explore the docs »</strong></a>
     <br />
@@ -42,12 +42,11 @@
     cd letthemlive
     ```
 
-4. Create a `.env` file in the root directory and add your Instagram username, password, and Chrome driver path:
+4. Create a `.env` file in the root directory and add your Instagram username and password:
 
     ```bash
     INSTA_USERNAME=your_username
     INSTA_PASSWORD=your_password
-    CHROME_DRIVER_PATH=your_chrome_driver_path
     ```
 
 5. Run the script:
@@ -58,21 +57,18 @@
 
 ## Usage
 
-This script logs into Instagram using the provided username and password, finds a user by their username, and sends them a direct message.
+This script logs into Instagram using the provided username and password, finds a user by their username, and sends them a direct message. It uses AutoGPT and LangChain to automate the conversation with the user.
 
 ## Troubleshooting
 
 If the script is not working as expected, check the following:
 
 - Make sure your Instagram username and password are correct and the account is not locked or restricted.
-- Make sure the API keys are correct.
 - Check the console for any error messages.
 
 ## Ongoing work
 
-Autogpt, langchain and autogpt are now plugged together. The conversation is not optimized though. See lastconversation.txt
-
-
+The integration of AutoGPT, LangChain, and Instagram is complete. The conversation flow is currently being optimized. See `lastconversation.txt` for the latest conversation. We will add some other methods in instagram and add other social media. 
 
 ## Contributing
 

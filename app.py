@@ -49,36 +49,55 @@ class InstagramTool:
         print("Getting user ID...")
         self.user_id = self.client.user_id_from_username('louvivien')
         print("User found")
+        # Initialize last_message_id and thread_id as None
+        self.last_message_id = None
+        self.thread_id = None
 
     def send_message(self, message):
         print("Sending message...")
         try:
             result = self.client.direct_send(message, user_ids=[self.user_id])
-            print('Message sent successfully')
             thread_id = result.thread_id
             thread = self.client.direct_thread(thread_id)
-            last_message_id = thread.messages[0].id
-            return last_message_id, thread_id
+            # Store last_message_id and thread_id as instance variables
+            self.last_message_id = thread.messages[0].id
+            self.thread_id = result.thread_id
+            print("Message sent successfully")
+            return  "Message sent successfully"
+        
         except ClientError as e:
             print('Message failed')
             print(e)
 
-    def receive_message(self, last_message_id, thread_id):
+    def receive_message(self, *args, **kwargs):
         print("Waiting for reply...")
-        for _ in range(3):  # try 3 times
+        for i in range(3):  # try 3 times
+            print(f"Attempt {i+1}...")
             self.client.delay_range = [27, 30]
-            thread = self.client.direct_thread(thread_id)
-            new_messages = [m for m in thread.messages if m.id > last_message_id]
+
+            # Check if last_message_id and thread_id are None
+            if self.last_message_id is None or self.thread_id is None:
+                print("You did not send a message yet. Suggest sending a messsage to the user.")
+                return  "You did not send a message yet. Suggest sending a messsage to the user."
+
+            print("Fetching thread...")
+            thread = self.client.direct_thread(self.thread_id)
+            print("Thread fetched. Checking for new messages...")
+            print("Thread : ", thread)
+            new_messages = [m for m in thread.messages if m.id > self.last_message_id]
             if new_messages:
+                print("New messages found:")
                 for message in new_messages:
                     print(f"Received message: {message.text}")
-                last_message_id = thread.messages[0].id
+                self.last_message_id = thread.messages[0].id
                 return new_messages
             else:
-                print("No reply received yet. Waiting again...")
+                print("No new messages found. Waiting again...")
                 self.client.delay_range = [57, 60]
+
         print("No reply received after 3 attempts.")
-        return None
+        return "No reply received yet. Suggest checking again in one hour."
+
 
 def run_autogpt(goal, username, password):
     print("Setting up tools for AutoGPT")
@@ -102,12 +121,12 @@ def run_autogpt(goal, username, password):
         Tool(
             name="instagram_send",
             func=instagram_tool.send_message,
-            description="Tool for sending messages to a user on Instagram"
+            description="Tool for sending messages to a user on Instagram."
         ),
         Tool(
             name="instagram_receive",
             func=instagram_tool.receive_message,
-            description="Tool for receiving messages from a user on Instagram"
+            description="Tool for receiving messages from a user on Instagram."
         ),
     ]
 
@@ -120,7 +139,7 @@ def run_autogpt(goal, username, password):
     # Set up model and AutoGPT
     agent = AutoGPT.from_llm_and_tools(
         ai_name="Tom",
-        ai_role="Assistant",
+        ai_role="Assistant. Do not say that you are an AI",
         tools=tools,
         llm=ChatOpenAI(temperature=0),
         memory=vectorstore.as_retriever()
