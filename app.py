@@ -144,7 +144,18 @@ class InstagramTool:
 
         print("Finished following users.")
 
+
+# # Function to train a model on Replicate and generate images
+# class ReplicateTool:
+
+#     def __init__():
         
+#     def train_model():
+
+#     def generate_image():
+  
+    
+    
 def run_autogpt(goal, username, password):
     print("Setting up tools for AutoGPT")
     # Set up tools for AutoGPT
@@ -153,6 +164,10 @@ def run_autogpt(goal, username, password):
     print("Setting up Instagram for AutoGPT")
     # Create an instance of InstagramTool
     instagram_tool = InstagramTool(username, password)
+
+    # print("Setting up Replicate for AutoGPT")
+    # # Create an instance of InstagramTool
+    # replicate_tool = ReplicateTool()
 
     print("Retrieving Instagram profile information...")
     try:
@@ -194,6 +209,16 @@ def run_autogpt(goal, username, password):
                 func=instagram_tool.follow_users,
                 description="Tool for following users on Instagram related to a specific topic."
             ),
+            # Tool(
+            #     name="replicate_train",
+            #     func=replicate_tool.train_model,
+            #     description="Tool for training a model on Replicate from a dataset."
+            # ),
+            # Tool(
+            #     name="replicate_generate",
+            #     func=replicate_tool.generate_image,
+            #     description="Tool for generating images from a model on Replicate"
+            # ),
         ]
 
     # Set up memory for AutoGPT
