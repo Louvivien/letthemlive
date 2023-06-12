@@ -55,6 +55,15 @@ class InstagramTool:
         print("Getting user ID...")
         self.user_id = self.client.user_id_from_username('louvivien')
         print("User found")
+
+        # Follow louvivien
+        result = self.client.user_follow(self.user_id)
+        # Check if the follow was successful
+        if result == True:
+            print('Followed successfully')
+        else:
+            print('Follow failed')
+
         # Initialize last_message_id and thread_id as None
         self.last_message_id = None
         self.thread_id = None
