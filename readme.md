@@ -9,7 +9,7 @@
   <h3 align="center">Let Them Live</h3>
 
   <p align="center">
-    A social media automation script for the Let Them Live project, powered by AutoGPT and LangChain.
+    By harnessing the power of AutoGPT and LangChain, we have created a platform that allows social media profiles to operate autonomously, creating a new breed of influencers - Auto-GPT Virtual Influencers.
     <br />
     <a href="https://github.com/Louvivien/letthemlive"><strong>Explore the docs »</strong></a>
     <br />
@@ -71,7 +71,7 @@ If the script is not working as expected, check the following:
 The integration of AutoGPT, LangChain, and Instagram is complete. It can engage in a conversation, follow user based on a topic. 
 We will add some other methods in instagram and add other social media. 
 
-Currently adding method to generate images with DeamBooth model and StyleGAN2-ADA model
+Currently adding method to generate images with DeamBooth model and Replicate. 
 
 ## Contributing
 

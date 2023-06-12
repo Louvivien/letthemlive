@@ -111,6 +111,7 @@ class InstagramTool:
     # def make_post():
     #         # Create this function
     #        # Ask chatGPT to create this function using this: https://github.com/adw0rd/instagrapi
+                # it should handle delays, errors and add prints
        
        
     
@@ -175,7 +176,7 @@ def run_autogpt(goal, username, password):
     instagram_tool = InstagramTool(username, password)
 
     # print("Setting up Replicate for AutoGPT")
-    # # Create an instance of InstagramTool
+    # # Create an instance of ReplicateTool
     # replicate_tool = ReplicateTool()
 
     print("Retrieving Instagram profile information...")
@@ -255,7 +256,7 @@ def run_autogpt(goal, username, password):
        )
     agent.chain.verbose = True
 
-    # Run AutoGPT with your goal and pass the user's reply as an argument
+    # Run AutoGPT with your goal 
     print("Running AutoGPT...")
     agent.run([goal])
 
