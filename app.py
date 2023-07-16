@@ -2,8 +2,7 @@ import os
 import time
 from dotenv import load_dotenv
 from instagrapi import Client
-from instagrapi.exceptions import ClientError
-from instagrapi.exceptions import LoginRequired
+from instagrapi.exceptions import ClientError, LoginRequired
 from langchain.utilities import SerpAPIWrapper
 from langchain.agents import Tool
 from langchain.tools.file_management.write import WriteFileTool
@@ -19,39 +18,67 @@ import random
 from flask import Flask
 from flask_caching import Cache
 import threading
+import redis
+from flask import Flask, render_template
+import logging
 
+
+# Configuring logging
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 
 
 # Load .env file
 def load_env():
-    print("Loading environment variables...")
+    logging.info("Loading environment variables...")
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     load_dotenv(dotenv_path)
-    
-# Load environment variables 
+
+    redis_url = os.getenv('CACHE_REDIS_URL')
+    if redis_url:
+        return redis_url
+    else:
+        logging.error("Redis URL is not specified in environment variables.")
+        raise ValueError("Redis URL is not specified in environment variables.")
+
+
+# Load environment variables
 load_env()
 username = os.getenv('INSTA_USERNAME')
 password = os.getenv('INSTA_PASSWORD')
-target_username = os.getenv('TARGET_USERNAME')   
-   
+target_username = os.getenv('TARGET_USERNAME')
+
 
 # Set up Flask and Cache
 app = Flask(__name__)
 cache = Cache(app, config={
     'CACHE_TYPE': 'redis',
-    'CACHE_REDIS_URL': os.getenv('CACHE_REDIS_URL')
+    'CACHE_REDIS_URL': load_env()
 })
- 
-## Tool to clear cache
-# http://127.0.0.1:5000/clear_cache   
+
+@app.route('/')
+def welcome():
+    return render_template('welcome.html', team='Let Them Live')
+
+
+# Tool to clear cache
 @app.route('/clear_cache', methods=['GET'])
 def clear_cache():
-    print("Clearing cache")
+    logging.info("Clearing cache")
     cache.clear()
     return "Cache has been cleared"
 
+
+
+
+
+
 # Set a very long timeout (e.g., 30 days)
+#VERY_LONG_TIMEOUT = 30 * 24 * 60 * 60  # 30 days in seconds
+#Cambiando el set pues ahora en Redis 7 se usa expire
 VERY_LONG_TIMEOUT = 30 * 24 * 60 * 60  # 30 days in seconds
+VERY_LONG_TIMEOUT_MS = VERY_LONG_TIMEOUT * 1000  # 30 days in milliseconds
+
+
 
 # Function to message a user on Instagram
 class InstagramTool:
@@ -107,44 +134,60 @@ class InstagramTool:
         self.follow_count = 0
         self.follow_reset_time = datetime.now() + timedelta(days=1)
 
-
-
     def login(self, username, password):
         try:
             print("Logging in to Instagram...")
             self.client.login(username, password)
             print('Logged in')
-            # Cache session with timeout
-            self.cache.set(f'{username}_session', self.client.settings, timeout=VERY_LONG_TIMEOUT)
-            print(f"Cached {username}_session with timeout {VERY_LONG_TIMEOUT} seconds")
-            # Check if session is cached
+            # Cache session in Redis with timeout
+            self.cache.set(f'{username}_session', self.client.settings)
+            self.cache.expire(f'{username}_session', VERY_LONG_TIMEOUT_MS)
+            print(f"Cached {username}_session in Redis with timeout {VERY_LONG_TIMEOUT} seconds")
+            # Check if session is cached in Redis
             session = self.cache.get(f'{username}_session')
             if session:
                 self.client.set_settings(session)
-                print("Session is cached")
+                print("Session is cached in Redis")
             else:
-                print("Session is not cached")
+                print("Session is not cached in Redis")
         except LoginRequired:
             print("Session expired. Logging in again...")
             self.client.login(username, password)
             print('Logged in')
-            # Cache session with timeout
+            # Cache session in Redis with timeout
             self.cache.set(f'{username}_session', self.client.settings, timeout=VERY_LONG_TIMEOUT)
-            print(f"Cached {username}_session with timeout {VERY_LONG_TIMEOUT} seconds")
-            # Check if session is cached
+            print(f"Cached {username}_session in Redis with timeout {VERY_LONG_TIMEOUT} seconds")
+            # Check if session is cached in Redis
             session = self.cache.get(f'{username}_session')
             if session:
                 self.client.set_settings(session)
-                print("Session is cached")
+                print("Session is cached in Redis")
             else:
-                print("Session is not cached")
+                print("Session is not cached in Redis")
         except Exception as e:
             print(f"Failed to login: {e}")
             raise e
 
     def get_user_id(self, username):
         try:
-            return self.client.user_id_from_username(username)
+            user_id = self.cache.get(f'{username}_user_id')
+            if user_id:
+                print("User ID loaded from cache in Redis")
+                return user_id
+            else:
+                user_id = self.client.user_id_from_username(username)
+                print("User found")
+                # Cache user_id in Redis with timeout
+                self.cache.set(f'{username}_user_id', user_id)
+                self.cache.expire(f'{username}_user_id', VERY_LONG_TIMEOUT_MS)
+                print(f"Cached {username}_user_id in Redis with timeout {VERY_LONG_TIMEOUT} seconds")
+                # Check if user_id is cached in Redis
+                user_id = self.cache.get(f'{username}_user_id')
+                if user_id:
+                    print("User_id is cached in Redis")
+                else:
+                    print("User_id is not cached in Redis")
+                return user_id
         except Exception as e:
             print(f"Failed to get user ID for {username}: {e}")
             return None
@@ -167,12 +210,11 @@ class InstagramTool:
             self.thread_id = result.thread_id
             self.last_sent_message = message
             print("Message sent successfully")
-            return  "Message sent successfully"
-        
+            return "Message sent successfully"
+
         except ClientError as e:
             print('Message failed')
             print(e)
-
 
     def receive_message(self, tool_input=None):
         print("Waiting for reply...")
@@ -183,7 +225,7 @@ class InstagramTool:
             # Check if last_message_id and thread_id are None
             if self.last_message_id is None or self.thread_id is None:
                 print("You did not send a message yet. Suggest sending a messsage to the user.")
-                return  "You did not send a message yet. Suggest sending a messsage to the user."
+                return "You did not send a message yet. Suggest sending a messsage to the user."
 
             print("Fetching thread...")
             thread = self.client.direct_thread(self.thread_id)
@@ -203,66 +245,7 @@ class InstagramTool:
         print("No reply received after 3 attempts.")
         return "No reply received yet. Suggest checking again in one hour."
 
-    
 
-    # def make_post():
-    #         # Create this function
-    #        # Ask chatGPT to create this function using this: https://github.com/adw0rd/instagrapi
-                # it should handle delays, errors and add prints
-       
-       
-    
-    def follow_users(self, topic):
-        # Check if the follow limit has been reached
-        if self.follow_count >= self.MAX_FOLLOW_PER_DAY:
-            print("Follow limit is reached for today. Can't proceed. Try again tomorrow.")
-            return
-
-        # Check if the follow count should be reset
-        if datetime.now() >= self.follow_reset_time:
-            print("Resetting follow count for the new day.")
-            self.follow_count = 0
-            self.follow_reset_time = datetime.now() + timedelta(days=1)
-
-        print("Searching for users related to the topic...")
-        try:
-            users = self.client.search_users(topic, count=50)  # Search for 50 users related to the topic
-            print(f"Found {len(users)} users related to {topic}")
-        except ClientError as e:
-            print(f"Failed to search users: {e}")
-            return
-
-        for user in users:
-            # Check if the follow limit has been reached
-            if self.follow_count >= self.MAX_FOLLOW_PER_DAY:
-                print("Follow limit is reached for today. Can't proceed. Try again tomorrow.")
-                return
-
-            try:
-                print(f"Following user {user.username}...")
-                self.client.user_follow(user.pk)  # Follow the user
-                self.follow_count += 1  # Increment the follow count
-                print(f"Followed user {user.username}")
-                time.sleep(random.uniform(2, 4))  # Random delay to mimic human behavior and avoid rate limits
-            except ClientError as e:
-                print(f"Failed to follow user {user.username}: {e}")
-
-        print("Finished following users.")
-
-
-# # Function to train a model on Replicate and generate images
-# class ReplicateTool:
-
-#     def __init__():
-        
-#     def train_model():
-# You can ask Chat GPT to create this from /letthemlive/DreamBooth_train_model.py
-
-#     def generate_image():
-# You can ask Chat GPT to create this from /letthemlive/DreamBooth_generate_image.py
-  
-    
-    
 def run_autogpt(goal, username, password, target_username, cache):
     print("Setting up tools for AutoGPT")
 
@@ -270,9 +253,15 @@ def run_autogpt(goal, username, password, target_username, cache):
     search = SerpAPIWrapper()
 
     print("Setting up Instagram for AutoGPT")
-    # Create an instance of InstagramTool
-    instagram_tool = InstagramTool(username, password, target_username, cache=cache)
+    # Create an instance of InstagramTool with Redis cache
+    #redis_cache = redis.Redis.from_url(cache)
+    # Cargar la URL de Redis desde la variable de entorno
+    redis_url = os.getenv('CACHE_REDIS_URL')
 
+    # Crear una instancia de Redis utilizando la URL correcta
+    redis_cache = redis.Redis.from_url(redis_url)
+
+    instagram_tool = InstagramTool(username, password, target_username, cache=redis_cache)
 
     print("Retrieving Instagram profile information...")
     # Check if profile_info is cached
@@ -283,19 +272,23 @@ def run_autogpt(goal, username, password, target_username, cache):
         try:
             profile_info = instagram_tool.client.user_info(instagram_tool.user_id)
             print("Profile information retrieved successfully")
-            # Cache profile_info with timeout
-            cache.set(f'{username}_profile_info', profile_info, timeout=VERY_LONG_TIMEOUT)
+
+            # Cache profile_info and set timeout
+            cache.set(f'{username}_profile_info', profile_info)
+            cache.expire(f'{username}_profile_info', VERY_LONG_TIMEOUT)
+
             print(f"Cached {username}_profile_info with timeout {VERY_LONG_TIMEOUT} seconds")
-            # Check if user_id is cached
+
+            # Check if profile_info is cached
             profile_info = cache.get(f'{username}_profile_info')
             if profile_info:
                 print("profile_info is cached")
             else:
                 print("profile_info is not cached")
-
         except Exception as e:
             print(f"Failed to retrieve profile information: {e}")
             return
+
 
     # Set the AI name and role based on the Instagram profile information
     ai_name = profile_info.full_name
@@ -306,49 +299,24 @@ def run_autogpt(goal, username, password, target_username, cache):
 
     # Add the send_message and receive_message methods as separate tools
     tools = [
-            Tool(
-                name="search",
-                func=search.run,
-                description="useful for when you need to answer questions about current events. You should ask targeted questions"
-            ),
-            WriteFileTool(),
-            ReadFileTool(),
-            Tool(
-                name="instagram_send",
-                func=instagram_tool.send_message,
-                description="Tool for sending messages to a user on Instagram. Requires a message as input. Make sure tool_input is not empty, it must contain your message to the user."
-            ),
-            Tool(
-                name="instagram_receive",
-                func=instagram_tool.receive_message,
-                description="Tool for receiving messages from a user on Instagram."
-            ),
-        
-
-            # Tool(
-            #     name="instagram_follow",
-            #     func=instagram_tool.follow_users,
-            #     description="Tool for following users on Instagram related to a specific topic."
-            # ),
-
-            # Tool(
-            #     name="instagram_make_post",
-            #     func=instagram_tool.make_post
-            #     description="Tool for making a post on Instagram"
-            # ),
-
-
-            # Tool(
-            #     name="replicate_train",
-            #     func=replicate_tool.train_model,
-            #     description="Tool for training a model on Replicate from a dataset."
-            # ),
-            # Tool(
-            #     name="replicate_generate",
-            #     func=replicate_tool.generate_image,
-            #     description="Tool for generating images from a model on Replicate"
-            # ),
-        ]
+        Tool(
+            name="search",
+            func=search.run,
+            description="useful for when you need to answer questions about current events. You should ask targeted questions"
+        ),
+        WriteFileTool(),
+        ReadFileTool(),
+        Tool(
+            name="instagram_send",
+            func=instagram_tool.send_message,
+            description="Tool for sending messages to a user on Instagram. Requires a message as input. Make sure tool_input is not empty, it must contain your message to the user."
+        ),
+        Tool(
+            name="instagram_receive",
+            func=instagram_tool.receive_message,
+            description="Tool for receiving messages from a user on Instagram."
+        ),
+    ]
 
     # Set up memory for AutoGPT
     embeddings_model = OpenAIEmbeddings()
@@ -363,16 +331,15 @@ def run_autogpt(goal, username, password, target_username, cache):
         tools=tools,
         llm=ChatOpenAI(temperature=0),
         memory=vectorstore.as_retriever()
-       )
+    )
     agent.chain.verbose = True
 
-    # Run AutoGPT with your goal 
+    # Run AutoGPT with your goal
     print("Running AutoGPT...")
     agent.run([goal])
 
 
 if __name__ == "__main__":
-    
     # Set your goal as a natural language string
     goal = "Engage in a conversation with an Instagram user"
 
@@ -381,8 +348,7 @@ if __name__ == "__main__":
     autogpt_thread.start()
 
     # Start server
-    app.run(debug=False)
-
+    app.run(debug=True, host='0.0.0.0')
 
 
 
