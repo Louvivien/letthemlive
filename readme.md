@@ -53,7 +53,7 @@
 5. Run the script:
 
     ```bash
-    python main.py
+    python app.py
     ```
 
 ## Usage
