@@ -29,17 +29,18 @@
 
 1. Install Python 3.6 or later.
 
-2. Install the required Python packages:
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3. Clone this repository:
+2. Clone this repository:
 
     ```bash
     git clone https://github.com/Louvivien/letthemlive.git
     cd letthemlive
+    ```
+
+
+3. Install the required Python packages:
+
+    ```bash
+    pip install -r requirements.txt
     ```
 
 4. Create a `.env` file in the root directory and add your Instagram username and password:
