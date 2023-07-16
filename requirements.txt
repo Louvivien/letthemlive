@@ -12,6 +12,3 @@ flask_caching
 flask
 dotenv
 faiss
-
-
-
