@@ -10,3 +10,8 @@ tiktoken
 redis
 flask_caching
 flask
+dotenv
+faiss
+
+
+
