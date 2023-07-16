@@ -1,7 +1,12 @@
-instagrapi
 python-dotenv
 instagrapi
 langchain
 faiss-cpu
 lark
 google-search-results
+Pillow
+openai
+tiktoken
+redis
+flask_caching
+flask

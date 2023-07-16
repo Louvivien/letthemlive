@@ -32,7 +32,7 @@
 2. Install the required Python packages:
 
     ```bash
-    pip install instagrapi python-dotenv
+    pip install -r requirements.txt
     ```
 
 3. Clone this repository:
