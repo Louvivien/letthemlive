@@ -58,6 +58,8 @@
 
 ## Usage
 
+Make sure the account sending messaged as a bio with a little story
+
 This script logs into Instagram using the provided username and password, finds a user by their username, and sends them a direct message. It uses AutoGPT and LangChain to automate the conversation with the user.
 
 ## Troubleshooting
