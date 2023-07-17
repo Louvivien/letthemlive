@@ -13,6 +13,8 @@ from langchain.docstore import InMemoryDocstore
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.experimental import AutoGPT
 from langchain.chat_models import ChatOpenAI
+from typing import Any, Dict, Optional
+from pydantic import BaseModel, Field, root_validator
 import faiss
 from datetime import datetime, timedelta
 import random
@@ -32,17 +34,22 @@ def load_env():
 load_env()
 username = os.getenv('INSTA_USERNAME')
 password = os.getenv('INSTA_PASSWORD')
-target_username = os.getenv('TARGET_USERNAME')   
-   
+target_username = os.getenv('TARGET_USERNAME')
+if not os.getenv('CACHE_REDIS_URL'):
+    print("Error: The CACHE_REDIS_URL environment variable is not set.")
+    exit(1)   
 
 # Set up Flask and Cache
 app = Flask(__name__)
 cache = Cache(app, config={
-    'CACHE_TYPE': 'redis',
-    'CACHE_REDIS_URL': os.getenv('CACHE_REDIS_URL')
-})
- 
- 
+        'CACHE_TYPE': 'redis',
+        'CACHE_REDIS_URL': os.getenv('CACHE_REDIS_URL')
+    })
+
+   
+
+
+
  
 @app.route('/')
 def welcome():
@@ -59,6 +66,23 @@ def clear_cache():
 
 # Set a very long timeout (e.g., 30 days)
 VERY_LONG_TIMEOUT = 30 * 24 * 60 * 60  # 30 days in seconds
+
+
+
+# Langchain input schemas
+# https://python.langchain.com/docs/modules/agents/tools/how_to/tool_input_validation
+
+class InstagramReceiveInputSchema(BaseModel):
+    optional_arg: Optional[str] = Field(None)
+
+    @root_validator(pre=True)
+    def remove_unnecessary_args(cls, values: Dict[str, Any]) -> Dict:
+        # Ignore the input and return None
+        return None
+
+class InstagramSendInputSchema(BaseModel):
+    tool_input: str
+
 
 # Function to message a user on Instagram
 class InstagramTool:
@@ -104,8 +128,11 @@ class InstagramTool:
             print("User ID retrieved from cache")
         else:
             self.user_id = self.client.user_id_from_username(target_username)
-            cache.set(user_id_key, self.user_id)
+            cache.set(user_id_key, self.user_id, timeout=VERY_LONG_TIMEOUT)  
             print("User ID retrieved from Instagram and saved to cache")
+        if user_id is None:
+            print("Error: Unable to get the user ID from the cache.")
+            exit(1)
         print("User found")
 
         # Initialize last_message_id and thread_id as None
@@ -124,7 +151,10 @@ class InstagramTool:
             print(f"Failed to get user ID for {username}: {e}")
             return None
 
-    def send_message(self, message):
+    def send_message(self, tool_input: InstagramSendInputSchema):
+        message = tool_input.tool_input
+        print(f"Arguments: {tool_input}")
+
         # Check if the message is empty
         if not message:
             return "You did not write a message to send, in order to use this tool you need to write a message to the user, try again please"
@@ -155,7 +185,8 @@ class InstagramTool:
 
 
 
-    def receive_message(self, tool_input=None):
+    def receive_message(self, tool_input: Optional[InstagramReceiveInputSchema] = None):
+        print(f"Arguments: {tool_input}")
         print("Waiting for reply...")
         for i in range(3):  # try 3 times
             print(f"Attempt {i+1}...")
@@ -185,10 +216,17 @@ class InstagramTool:
         print("No reply received after 3 attempts.")
         return "No reply received yet. Suggest checking again in one hour."
 
+
+
+
     
 def run_autogpt(goal, username, password, target_username, cache):
     print("Setting up tools for AutoGPT")
-
+    
+    if cache is None:
+        print("Error: Unable to connect to the Redis server.")
+        exit(1)
+    
     # Set up tools for AutoGPT
     search = SerpAPIWrapper()
 
@@ -204,13 +242,11 @@ def run_autogpt(goal, username, password, target_username, cache):
     else:
         try:
             profile_info = instagram_tool.client.user_info(instagram_tool.client.user_id)
-            cache.set(profile_info_key, profile_info)
+            cache.set(profile_info_key, profile_info, timeout=VERY_LONG_TIMEOUT)  
             print("Profile information retrieved from Instagram and saved to cache")
         except Exception as e:
             print(f"Failed to retrieve profile information: {e}")
             return
-    print("Profile information retrieved successfully")
-    print("Profile info : ", profile_info)
 
     # Set the AI name and role based on the Instagram profile information
     ai_name = profile_info.full_name
@@ -231,13 +267,15 @@ def run_autogpt(goal, username, password, target_username, cache):
             Tool(
                 name="instagram_send",
                 func=instagram_tool.send_message,
+                args_schema=InstagramSendInputSchema,
                 description="Tool for sending a message to a user on Instagram. You must write a message to use this tool, it will not work if you do not write a message"
             ),
             Tool(
                 name="instagram_receive",
                 func=instagram_tool.receive_message,
+                args_schema=InstagramReceiveInputSchema,
                 description="Tool for receiving messages from a user on Instagram."
-            )
+            ),
         ]
 
     # Set up memory for AutoGPT
@@ -265,6 +303,8 @@ if __name__ == "__main__":
     
     # Set your goal as a natural language string
     goal = "Engage in a conversation with an Instagram user"
+    
+    
 
     # Create a thread for AutoGPT
     autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
