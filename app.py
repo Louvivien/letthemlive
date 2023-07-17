@@ -1,3 +1,4 @@
+
 import os
 import time
 from dotenv import load_dotenv
@@ -72,16 +73,20 @@ VERY_LONG_TIMEOUT = 30 * 24 * 60 * 60  # 30 days in seconds
 # Langchain input schemas
 # https://python.langchain.com/docs/modules/agents/tools/how_to/tool_input_validation
 
-class InstagramReceiveInputSchema(BaseModel):
-    optional_arg: Optional[str] = Field(None)
-
-    @root_validator(pre=True)
-    def remove_unnecessary_args(cls, values: Dict[str, Any]) -> Dict:
-        # Ignore the input and return None
-        return None
 
 class InstagramSendInputSchema(BaseModel):
-    tool_input: str
+    tool_input: str = Field(...)
+
+    @root_validator
+    def validate_input(cls, values: Dict[str, Any]) -> Dict:
+        tool_input = values["tool_input"]
+        if not tool_input:
+            raise ValueError("You are using the send_message tool without providing a message to send. To make this work you first need to write the message then use this tool. Do not write the message in a file or it will not work")
+        
+        if tool_input.endswith('.txt'):
+            raise ValueError("You are using the send_message tool with a file. This tool does not work with files, you need to write a regular message, not provide a file")
+        
+        return values
 
 
 # Function to message a user on Instagram
@@ -89,8 +94,12 @@ class InstagramTool:
     MAX_FOLLOW_PER_DAY = 150
 
     def __init__(self, username, password, target_username, proxy=None, cache=None):
-        print("Initializing Instagram client...")
-        self.client = Client()
+        try:
+            print("Initializing Instagram client...")
+            self.client = Client()
+        except Exception as e:
+            print(f"Error while initializing Instagram client: {e}")
+            return
         self.client.delay_range = [1, 3]
         self.cache = cache
         self.target_username = target_username
@@ -152,19 +161,18 @@ class InstagramTool:
             return None
 
     def send_message(self, tool_input: InstagramSendInputSchema):
+        if isinstance(tool_input, str):
+            tool_input = InstagramSendInputSchema(tool_input=tool_input)
         message = tool_input.tool_input
         print(f"Arguments: {tool_input}")
-
         # Check if the message is empty
         if not message:
             return "You did not write a message to send, in order to use this tool you need to write a message to the user, try again please"
-
         print(f"Message: {message}")  # Log the message
-
         # Check if the message is the same as the last sent message
         if message == self.last_sent_message:
-            print("Message is the same as the last sent message. Skipping sending.")
-            return "Message is the same as the last sent message. Skipping sending."
+            print("Message is the same as the last sent message. Skipping sending. Did you wait for the user reply? Suggest using instagram_receive")
+            return "Message is the same as the last sent message. Skipping sending. Did you wait for the user reply? Suggest using instagram_receive"
 
 
         try:
@@ -185,29 +193,38 @@ class InstagramTool:
 
 
 
-    def receive_message(self, tool_input: Optional[InstagramReceiveInputSchema] = None):
-        print(f"Arguments: {tool_input}")
+    def receive_message(self, tool_input: Optional[str] = None):
         print("Waiting for reply...")
+
+        # Check if last_message_id and thread_id are None
+        if self.last_message_id is None or self.thread_id is None:
+            print("You did not send a message yet. Suggest sending a messsage to the user.")
+            return  "You did not send a message yet. Suggest sending a messsage to the user."
+
         for i in range(3):  # try 3 times
             print(f"Attempt {i+1}...")
             self.client.delay_range = [27, 30]
 
-            # Check if last_message_id and thread_id are None
-            if self.last_message_id is None or self.thread_id is None:
-                print("You did not send a message yet. Suggest sending a messsage to the user.")
-                return  "You did not send a message yet. Suggest sending a messsage to the user."
+            try:
+                print("Fetching thread...")
+                thread = self.client.direct_thread(self.thread_id)
+                print("Thread fetched. Checking for new messages...")
+                print("Thread : ", thread)
+                new_messages = [m for m in thread.messages if m.timestamp > self.last_sent_timestamp and m.item_type != 'placeholder']
+            except Exception as e:
+                print(f"Error while fetching thread or checking for new messages: {e}")
+                return f"Error while fetching thread or checking for new messages: {e}"
 
-            print("Fetching thread...")
-            thread = self.client.direct_thread(self.thread_id)
-            print("Thread fetched. Checking for new messages...")
-            print("Thread : ", thread)
-            new_messages = [m for m in thread.messages if m.timestamp > self.last_sent_timestamp and m.item_type != 'placeholder']
             if new_messages:
                 print("New messages found:")
                 for message in new_messages:
                     print(f"Received message: {message.text}")
-                self.last_message_id = thread.messages[0].id
-                self.last_sent_timestamp = thread.messages[0].timestamp
+                try:
+                    self.last_message_id = thread.messages[0].id
+                    self.last_sent_timestamp = thread.messages[0].timestamp
+                except Exception as e:
+                    print(f"Error while updating last_message_id or last_sent_timestamp: {e}")
+                    return f"Error while updating last_message_id or last_sent_timestamp: {e}"
                 return new_messages
             else:
                 print("No new messages found. Waiting again...")
@@ -215,6 +232,9 @@ class InstagramTool:
 
         print("No reply received after 3 attempts.")
         return "No reply received yet. Suggest checking again in one hour."
+
+
+
 
 
 
@@ -251,7 +271,7 @@ def run_autogpt(goal, username, password, target_username, cache):
     # Set the AI name and role based on the Instagram profile information
     ai_name = profile_info.full_name
     if profile_info.biography:
-        ai_role = f"This is your bio: {profile_info.biography}. Act as if you were this person, never say that you are an AI."
+        ai_role = f"This is your bio: {profile_info.biography}. Act as if you were this person, never say that you are an AI. Do not write in a commercial way, write as if you were a real person not a salesperson."
     else:
         ai_role = "This is your bio: I am a passionate individual who loves to engage with people and share my thoughts. Act as if you were this person, never say that you are an AI."
 
@@ -268,14 +288,13 @@ def run_autogpt(goal, username, password, target_username, cache):
                 name="instagram_send",
                 func=instagram_tool.send_message,
                 args_schema=InstagramSendInputSchema,
-                description="Tool for sending a message to a user on Instagram. You must write a message to use this tool, it will not work if you do not write a message"
+                description="Tool for sending a message that you have previously written to a user on Instagram. Do not write the message you want to send in a file or it will not work."
             ),
             Tool(
                 name="instagram_receive",
                 func=instagram_tool.receive_message,
-                args_schema=InstagramReceiveInputSchema,
                 description="Tool for receiving messages from a user on Instagram."
-            ),
+            )
         ]
 
     # Set up memory for AutoGPT
