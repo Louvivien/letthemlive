@@ -225,17 +225,13 @@ class InstagramTool:
                 except Exception as e:
                     print(f"Error while updating last_message_id or last_sent_timestamp: {e}")
                     return f"Error while updating last_message_id or last_sent_timestamp: {e}"
-                return new_messages
+                return f"Command instagram_receive returned: the user replied: '{new_messages[0].text}. Suggest sending a new messsage to the user to continue the discussion.'"
             else:
                 print("No new messages found. Waiting again...")
                 self.client.delay_range = [57, 60]
 
         print("No reply received after 3 attempts.")
         return "No reply received yet. Suggest checking again in one hour."
-
-
-
-
 
 
 
