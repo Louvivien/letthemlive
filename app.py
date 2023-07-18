@@ -40,7 +40,7 @@ if not os.getenv('CACHE_REDIS_URL'):
     print("Error: The CACHE_REDIS_URL environment variable is not set.")
     exit(1)   
 
-# Set up Flask and Cache
+# Set up Flask server and Cache
 app = Flask(__name__)
 cache = Cache(app, config={
         'CACHE_TYPE': 'redis',
@@ -49,9 +49,7 @@ cache = Cache(app, config={
 
    
 
-
-
- 
+## Routes for frontend
 @app.route('/')
 def welcome():
     return render_template('welcome.html', team='Let Them Live')
@@ -64,16 +62,13 @@ def clear_cache():
     print("Clearing cache")
     cache.clear()
     return "Cache has been cleared"
-
-# Set a very long timeout (e.g., 30 days)
+# Set how long the data will stay in the cache
 VERY_LONG_TIMEOUT = 30 * 24 * 60 * 60  # 30 days in seconds
 
 
 
-# Langchain input schemas
+# Langchain input schemas for checking inputs to tools
 # https://python.langchain.com/docs/modules/agents/tools/how_to/tool_input_validation
-
-
 class InstagramSendInputSchema(BaseModel):
     tool_input: str = Field(...)
 
@@ -87,16 +82,26 @@ class InstagramSendInputSchema(BaseModel):
             raise ValueError("You are using the send_message tool with a file. This tool does not work with files, you need to write a regular message, not provide a file")
         
         return values
+   
+   
+# Functions for Instragram using instagrapi methods
+# https://github.com/adw0rd/instagrapi/
+ 
+# Custom instagrapi client to load and dump settings from and to an object
+class CustomClient(Client):
+    def load_settings_from_object(self, settings):
+        self.set_settings(settings)
 
+    def dump_settings_to_object(self):
+        return self.get_settings()
 
-# Function to message a user on Instagram
 class InstagramTool:
     MAX_FOLLOW_PER_DAY = 150
 
     def __init__(self, username, password, target_username, proxy=None, cache=None):
         try:
             print("Initializing Instagram client...")
-            self.client = Client()
+            self.client = CustomClient()
         except Exception as e:
             print(f"Error while initializing Instagram client: {e}")
             return
@@ -104,31 +109,32 @@ class InstagramTool:
         self.cache = cache
         self.target_username = target_username
         
-        # Initialize last_sent_message as None
-        self.last_sent_message = None
+        # Load session from cache
+        session_key = f"{username}_session"
+        session_data = self.cache.get(session_key)
 
-        session_file = f"{username}_session.json"
+        if session_data:
+            self.client.load_settings_from_object(session_data)
+            print("Session loaded from cache")
+        else:
+            try:
+                print("Logging in to Instagram...")
+                self.client.login(username, password)
+                print('Logged in')
+            except LoginRequired:
+                print("Session expired. Logging in again...")
+                self.client.login(username, password)
+                print('Logged in')
+            session_data = self.client.dump_settings_to_object()
+            self.cache.set(session_key, session_data, timeout=VERY_LONG_TIMEOUT)
+        time.sleep(random.uniform(2, 4))  # Random delay to mimic human behavior and avoid rate limits
 
-        if os.path.exists(session_file):
-            self.client.load_settings(session_file)
-            print("Session loaded from file")
-        try:
-            print("Logging in to Instagram...")
-            self.client.login(username, password)
-            print('Logged in')
-        except LoginRequired:
-            print("Session expired. Logging in again...")
-            self.client.login(username, password)
-            print('Logged in')
-        self.client.dump_settings(session_file)
-
-        
         if proxy:
             print("Setting up proxy...")
             self.client.set_proxy(proxy)
             print("Proxy set up")
 
-
+        # Find user ID of the target
         print("Getting user ID...")
         user_id_key = f"user_id:{target_username}"
         user_id = cache.get(user_id_key)
@@ -143,37 +149,62 @@ class InstagramTool:
             print("Error: Unable to get the user ID from the cache.")
             exit(1)
         print("User found")
+        time.sleep(random.uniform(2, 4))  # Random delay to mimic human behavior and avoid rate limits
 
+        # Initialize last_sent_message as None
+        self.last_sent_message = None
         # Initialize last_message_id and thread_id as None
         self.last_message_id = None
         self.thread_id = None
+                
         # Initialize follow count
         self.follow_count = 0
         self.follow_reset_time = datetime.now() + timedelta(days=1)
 
+        # Check if the target user is already followed
+        follow_status_key = f"{username}_follows_{target_username}_true"
+        follow_status = self.cache.get(follow_status_key)
+        if follow_status:
+            print("User already followed. Skipping follow.")
+        else:
+            # Check if the follow limit has been reached
+            if self.follow_count >= self.MAX_FOLLOW_PER_DAY:
+                print("Follow limit is reached for today. Can't proceed. Try again tomorrow.")
+                return
+            # Check if the follow count should be reset
+            if datetime.now() >= self.follow_reset_time:
+                print("Resetting follow count for the new day.")
+                self.follow_count = 0
+                self.follow_reset_time = datetime.now() + timedelta(days=1)
 
-
-    def get_user_id(self, username):
-        try:
-            return self.client.user_id_from_username(username)
-        except Exception as e:
-            print(f"Failed to get user ID for {username}: {e}")
-            return None
+            # Follow target_username
+            result = self.client.user_follow(self.user_id)
+            # Check if the follow was successful
+            if result == True:
+                print('Followed successfully')
+                # Save follow status to cache
+                self.cache.set(follow_status_key, True, timeout=VERY_LONG_TIMEOUT)
+                self.follow_count += 1  # Increment the follow count
+                time.sleep(random.uniform(2, 4))  # Random delay to mimic human behavior and avoid rate limits
+            else:
+                print('Follow failed')
+        
 
     def send_message(self, tool_input: InstagramSendInputSchema):
         if isinstance(tool_input, str):
             tool_input = InstagramSendInputSchema(tool_input=tool_input)
         message = tool_input.tool_input
         print(f"Arguments: {tool_input}")
+        
         # Check if the message is empty
         if not message:
             return "You did not write a message to send, in order to use this tool you need to write a message to the user, try again please"
         print(f"Message: {message}")  # Log the message
+        
         # Check if the message is the same as the last sent message
         if message == self.last_sent_message:
             print("Message is the same as the last sent message. Skipping sending. Did you wait for the user reply? Suggest using instagram_receive")
             return "Message is the same as the last sent message. Skipping sending. Did you wait for the user reply? Suggest using instagram_receive"
-
 
         try:
             result = self.client.direct_send(message, user_ids=[self.user_id])
@@ -190,7 +221,6 @@ class InstagramTool:
         except ClientError as e:
             print('Message failed')
             print(e)
-
 
 
     def receive_message(self, tool_input: Optional[str] = None):
@@ -235,7 +265,7 @@ class InstagramTool:
 
 
 
-    
+# AutoGPT lauched by Langchain   
 def run_autogpt(goal, username, password, target_username, cache):
     print("Setting up tools for AutoGPT")
     
@@ -247,7 +277,7 @@ def run_autogpt(goal, username, password, target_username, cache):
     search = SerpAPIWrapper()
 
     print("Setting up Instagram for AutoGPT")
-    # Create an instance of InstagramTool
+    # Create an instance of InstagramTool so to access instagrapi methods
     instagram_tool = InstagramTool(username, password, target_username, cache=cache)
 
     print("Retrieving Instagram profile information...")
@@ -271,7 +301,7 @@ def run_autogpt(goal, username, password, target_username, cache):
     else:
         ai_role = "This is your bio: I am a passionate individual who loves to engage with people and share my thoughts. Act as if you were this person, never say that you are an AI."
 
-    # Add the send_message and receive_message methods as separate tools
+    # Langchain: set the tools that AutoGPT can use
     tools = [
             Tool(
                 name="search",
@@ -293,13 +323,13 @@ def run_autogpt(goal, username, password, target_username, cache):
             )
         ]
 
-    # Set up memory for AutoGPT
+    # Langchain: set up memory for AutoGPT
     embeddings_model = OpenAIEmbeddings()
     embedding_size = 1536
     index = faiss.IndexFlatL2(embedding_size)
     vectorstore = FAISS(embeddings_model.embed_query, index, InMemoryDocstore({}), {})
 
-    # Set up model and AutoGPT
+    # Langchain: set up model and AutoGPT
     agent = AutoGPT.from_llm_and_tools(
         ai_name=ai_name,
         ai_role=ai_role,
@@ -319,8 +349,6 @@ if __name__ == "__main__":
     # Set your goal as a natural language string
     goal = "Engage in a conversation with an Instagram user"
     
-    
-
     # Create a thread for AutoGPT
     autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
     autogpt_thread.start()
