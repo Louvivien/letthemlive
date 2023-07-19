@@ -263,6 +263,13 @@ class InstagramTool:
         print("No reply received after 3 attempts.")
         return "No reply received yet. Suggest checking again in one hour."
 
+    def edit_account(self, **kwargs):
+        print(f"Changing following account data: {', '.join(kwargs.keys())}")
+        try:
+            self.client.account_edit(**kwargs)
+            print("Account data changed successfully")
+        except Exception as e:
+            print(f"Error while changing account details: {e}")
 
 
 # AutoGPT lauched by Langchain   
@@ -343,15 +350,29 @@ def run_autogpt(goal, username, password, target_username, cache):
     print("Running AutoGPT...")
     agent.run([goal])
 
+def run_profile_edit(username, password, target_username, cache, **kwargs):
+    print("Editing Account Details")
+
+    if cache is None:
+        print("Error: Unable to connect to the Redis server.")
+        exit(1)
+
+    instagram_tool = InstagramTool(username, password, target_username, cache=cache)
+    instagram_tool.edit_account(**kwargs)
+
 
 if __name__ == "__main__":
     
     # Set your goal as a natural language string
-    goal = "Engage in a conversation with an Instagram user"
+    #goal = "Engage in a conversation with an Instagram user"
     
     # Create a thread for AutoGPT
-    autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
-    autogpt_thread.start()
+    #autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
+    #autogpt_thread.start()
+
+    # Creating a thread to test changing account details
+    profile_edit_thread = threading.Thread(target=run_profile_edit, args=(username, password, target_username, cache), kwargs={'biography': "Whatever to put here", 'full_name': "Any new name", 'external_url': "http://feedlink.io/"})
+    profile_edit_thread.start()
 
     # Start server
     app.run(debug=False)
