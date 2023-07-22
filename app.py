@@ -271,6 +271,13 @@ class InstagramTool:
         except Exception as e:
             print(f"Error while changing account details: {e}")
 
+    def change_account_pfp(self, path_to_pfp):
+        print(f"Changing account profile picture")
+        try:
+            self.client.account_change_picture(path_to_pfp)
+        except Exception as e:
+            print(f"Error encountered while changing profile picture: {e}")
+
 
 # AutoGPT lauched by Langchain   
 def run_autogpt(goal, username, password, target_username, cache):
