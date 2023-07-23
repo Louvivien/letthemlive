@@ -480,29 +480,82 @@ def run_profile_edit(username, password, target_username, cache, **kwargs):
     instagram_tool = InstagramTool(username, password, target_username, cache=cache)
     instagram_tool.edit_account(**kwargs)
 
+def get_hugging_face_config():
+    HUGGING_FACE_API_KEY  = os.getenv('HUGGING_FACE_API_KEY')
+    API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
+    headers = {"Authorization": f"Bearer {HUGGING_FACE_API_KEY}"}
+    
+    if not HUGGING_FACE_API_KEY:
+        print("Hugging Face API Key is not set")
+        return None, None
 
-def read_image(image_url: str) -> str:
+    return API_URL, headers
+
+@app.route('/api/process', methods=['POST'])
+def api_process():
+    data = request.get_json()
+    print(data)
+    result = None
+
+    if 'url' in data or 'io' in data:
+        image_url_or_io = data.get('url', data.get('io'))
+        result = process_url_or_io(image_url_or_io, read_image_by_io_endpoint)
+        if result is None:
+            result = process_url_or_io(image_url_or_io, process_image_url)
+    elif 'image' in data:
+        image_filename = data['image']
+        with open(image_filename, 'rb') as image_file:
+            image_data = image_file.read()
+        result = process_image(image_data)
+    else:
+        return jsonify({"error": "No image or URL in request"}), 400
+    
+    if result is None:
+        return jsonify({"error": "Image processing failed"}), 500
+    return jsonify({"result": result})
+
+def process_url_or_io(image_url_or_io: str, processor_func):
     try:
-        HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY')
-        API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
-        headers = {"Authorization": f"Bearer {HUGGING_FACE_API_KEY}"}
-        response = requests.post(API_URL, headers=headers, data=image_url)
+        return processor_func(image_url_or_io)
+    except Exception as e:
+        print(f"Error processing: {e}")
+        return None
+
+def post_request(api_url, headers, data):
+    response = requests.post(api_url, headers=headers, data=data)
+    if response.status_code != 200:
+        print(f"Request failed with status {response.status_code}")
+        return None
+
+    try:
         response_json = response.json()
         return response_json[0]["generated_text"]
+    except (KeyError, IndexError, ValueError) as e:
+        print(f"Error parsing response: {e}")
+        return None
+
+def process_image(image_data):
+    API_URL, headers = get_hugging_face_config()
+    if API_URL is None or headers is None:
+        return None
+
+    return post_request(API_URL, headers, image_data)
+
+def process_image_url(image_url):
+    API_URL, headers = get_hugging_face_config()
+    if API_URL is None or headers is None:
+        return None
+
+    try:
+        image_data = urlopen(image_url).read()
     except Exception as e:
-        print(f"Image description from Hugging Face failed due to error: {e}")
-        print("Getting Image description from image-to-caption.io endpoint")
-        try:
-            return read_image_by_io_endpoint(image_url)
-        except Exception as e:
-            print(f"Image description from io endpoint failed due to error: {e}")
+        print(f"Error loading image from URL: {e}")
+        return None
 
-    return ""
+    return post_request(API_URL, headers, image_data)
 
-def read_image_by_io_endpoint(image_url: str) -> str:
-
+def read_image_by_io_endpoint(image_url: str):
     ENDPOINT_URL = "https://image-to-caption.io/api/v1/description"
-
     payload = json.dumps({
         "imageUrl": image_url
     })
@@ -527,45 +580,28 @@ def read_image_by_io_endpoint(image_url: str) -> str:
         'x-csrftoken': 'Ud7UiwLDNHWqiFTwFW1vukOJcMYEULIL'
     }
 
-    response = requests.request("POST", ENDPOINT_URL, headers=headers, data=payload)
+    try:
+        response = requests.request("POST", ENDPOINT_URL, headers=headers, data=payload)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as errh:
+        print ("HTTP Error:",errh)
+        return None
+    except requests.exceptions.ConnectionError as errc:
+        print ("Error Connecting:",errc )
+        return None
+    except requests.exceptions.Timeout as errt:
+        print ("Timeout Error:",errt)
+        return None
+    except requests.exceptions.RequestException as err:
+        print ("Something went wrong with the request:",err)
+        return None
 
-    response_json = json.loads(response.text)
-
-    return response_json["description"]
-
-def generate_instagram_caption(image_description: str, use_emoji: bool = True) -> list:
-
-    ENDPOINT_URL = "https://image-to-caption.io/api/v1/captions"
-
-    payload = json.dumps({
-        "description": image_description,
-        "useEmoji": use_emoji
-    })
-    headers = {
-        'authority': 'image-to-caption.io',
-        'accept': '/',
-        'accept-language': 'en-US,en;q=0.9',
-        'cache-control': 'no-cache',
-        'content-type': 'application/json',
-        'cookie': '_ga=GA1.1.991307832.1690024023; _ga_9ELLC7L1NQ=GS1.1.1690024022.1.1.1690026865.0.0.0',
-        'origin': 'https://image-to-caption.io',
-        'pragma': 'no-cache',
-        'referer': 'https://image-to-caption.io/',
-        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-        'x-csrftoken': 'Ud7UiwLDNHWqiFTwFW1vukOJcMYEULIL'
-    }
-
-    response = requests.request("POST", ENDPOINT_URL, headers=headers, data=payload)
-
-    response_json = json.loads(response.text)
-
-    return response_json["captions"]
+    try:
+        response_json = response.json()
+        return response_json.get("description", "No description available")
+    except ValueError:
+        print("Decoding JSON has failed")
+        return None
 
 if __name__ == "__main__":
 
