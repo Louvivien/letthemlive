@@ -21,10 +21,11 @@ from pydantic import BaseModel, Field, root_validator
 import faiss
 from datetime import datetime, timedelta
 import random
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 from flask_caching import Cache
 import threading
 import random
+from urllib.request import urlopen
 
 
 # Load .env file
