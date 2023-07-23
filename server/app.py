@@ -21,7 +21,9 @@ from pydantic import BaseModel, Field, root_validator
 import faiss
 from datetime import datetime, timedelta
 import random
-from flask import Flask, render_template
+from flask import Flask, send_from_directory
+from flask_cors import CORS
+
 from flask_caching import Cache
 import threading
 import random
@@ -43,19 +45,25 @@ if not os.getenv('CACHE_REDIS_URL'):
     exit(1)
 
 # Set up Flask server and Cache
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../client/build')
+CORS(app)
 cache = Cache(app, config={
         'CACHE_TYPE': 'redis',
         'CACHE_REDIS_URL': os.getenv('CACHE_REDIS_URL')
     })
 
-
-
 ## Routes for frontend
-@app.route('/')
-def welcome():
-    return render_template('welcome.html', team='Let Them Live')
+@app.route('/api')
+def api():
+    return 'Hello World from Flask!'
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 ## Tool to clear cache
 # http://127.0.0.1:5000/clear_cache
