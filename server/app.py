@@ -43,7 +43,7 @@ target_username = os.getenv('TARGET_USERNAME')
 
 
 # Set up Flask server and Cache
-app = Flask(__name__, static_folder=os.path.abspath("../client/build"))
+app = Flask(__name__, static_folder=os.path.abspath("./client/build"))
 CORS(app)
 cache = Cache(app, config={
         'CACHE_TYPE': 'redis',
