@@ -1,0 +1,35 @@
+.influencer-info-container{
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.vertical-icon{
+    position: relative;
+    left: 100px;
+}
+.influencer-card-container{
+    display: inline-block;
+    padding: 15px;
+    background-color: white;
+    margin:5px;
+    
+}
+.influencer-name{
+    font-size: 1p7x;
+    font-weight: bold;
+    margin-top: 5px;
+
+}
+.influencer-title{
+    font-size: 10px;
+    color: gray;
+    margin-top: -7px;
+    text-align: start;
+}
+.influencer-name-container{
+    /* border: 1px solid black; */
+    display: flex;
+    flex-direction: column; 
+    /* justify-content: center; */
+    padding: 5px;
+}
