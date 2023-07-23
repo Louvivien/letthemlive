@@ -43,7 +43,7 @@ target_username = os.getenv('TARGET_USERNAME')
 
 
 # Set up Flask server and Cache
-app = Flask(__name__, static_folder='../client/build')
+app = Flask(__name__, static_folder=os.path.abspath("../client/build"))
 CORS(app)
 cache = Cache(app, config={
         'CACHE_TYPE': 'redis',
@@ -55,13 +55,16 @@ cache = Cache(app, config={
 def api():
     return 'Hello World from Flask!'
 
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
     if path != "" and os.path.exists(app.static_folder + '/' + path):
         return send_from_directory(app.static_folder, path)
     else:
+        print(f"Serving index.html from {app.static_folder}")
         return send_from_directory(app.static_folder, 'index.html')
+    
 
 ## Tool to clear cache
 # http://127.0.0.1:5000/clear_cache
