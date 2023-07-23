@@ -113,3 +113,5 @@ dist
 .tern-port
 
 build
+
+/venv
