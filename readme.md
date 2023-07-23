@@ -25,7 +25,7 @@
 ![Python Version][python-image]
 ![License][license-image]
 
-## Setup
+## Setup 
 
 1. Install Python 3.6 or later.
 
@@ -35,26 +35,65 @@
     git clone https://github.com/Louvivien/letthemlive.git
     cd letthemlive
     ```
+    
+    
+    
+3. Go to the server folder
+    ```bash
+
+cd server
+    ```
 
 
-3. Install the required Python packages:
+ 4. Install the required Python packages:
 
     ```bash
     pip install -r requirements.txt
     ```
 
-4. Create a `.env` file in the root directory and add your Instagram username and password:
+5. Create a `.env` file in the root directory and add your Instagram username and password:
 
     ```bash
     INSTA_USERNAME=your_username
     INSTA_PASSWORD=your_password
+    SERPAPI_API_KEY=b
+    OPENAI_API_KEY=
+    CACHE_REDIS_URL=set a standard redis account (used as a cache system)
+    TARGET_USERNAME=instagram username to engage a conversation with
+    HUGGING_FACE_API_KEY=
     ```
 
-5. Run the script:
+6. Run the script:
 
     ```bash
     python app.py
     ```
+
+
+Open another terminal windows
+    
+7. 
+    ```bash
+
+cd client
+    ```
+
+
+8. install packages
+    ```bash
+
+   npm i
+    ```
+
+
+9. start the client
+    ```bash
+
+   npm start
+
+    ```
+
+
 
 ## Usage
 
@@ -71,10 +110,9 @@ If the script is not working as expected, check the following:
 
 ## Ongoing work
 
-The integration of AutoGPT, LangChain, and Instagram is complete. It can engage in a conversation, follow user based on a topic. 
-We will add some other methods in instagram and add other social media. 
-
-Currently adding method to generate images with DeamBooth model and Replicate. 
+The integration of AutoGPT, LangChain, and Instagram is complete. It can engage in a conversation, follow user based on a topic and comment.
+We will add some other methods in instagram and add other social media : can identify the content of an image and comment from what it as identified in the picture
+For now the client is not connected to the server
 
 ## Contributing
 
