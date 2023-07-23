@@ -1,3 +1,6 @@
+gunicorn
+
+
 python-dotenv
 instagrapi
 langchain

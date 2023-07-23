@@ -30,5 +30,6 @@ ENV FLASK_RUN_PORT=5000
 # Expose the port the app runs in
 EXPOSE 5000
 
-# Start the application
-CMD ["flask", "run"]
+
+# Run gunicorn when the container launches
+CMD ["gunicorn", "-t", "600", "app:app", "-b", "0.0.0.0:5000"]
