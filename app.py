@@ -1,4 +1,5 @@
-
+import json
+import requests
 import os
 import time
 from dotenv import load_dotenv
@@ -31,15 +32,15 @@ def load_env():
     print("Loading environment variables...")
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     load_dotenv(dotenv_path)
-    
-# Load environment variables 
+
+# Load environment variables
 load_env()
 username = os.getenv('INSTA_USERNAME')
 password = os.getenv('INSTA_PASSWORD')
 target_username = os.getenv('TARGET_USERNAME')
 if not os.getenv('CACHE_REDIS_URL'):
     print("Error: The CACHE_REDIS_URL environment variable is not set.")
-    exit(1)   
+    exit(1)
 
 # Set up Flask server and Cache
 app = Flask(__name__)
@@ -48,16 +49,16 @@ cache = Cache(app, config={
         'CACHE_REDIS_URL': os.getenv('CACHE_REDIS_URL')
     })
 
-   
+
 
 ## Routes for frontend
 @app.route('/')
 def welcome():
     return render_template('welcome.html', team='Let Them Live')
 
- 
+
 ## Tool to clear cache
-# http://127.0.0.1:5000/clear_cache   
+# http://127.0.0.1:5000/clear_cache
 @app.route('/clear_cache', methods=['GET'])
 def clear_cache():
     print("Clearing cache")
@@ -78,10 +79,10 @@ class InstagramSendInputSchema(BaseModel):
         tool_input = values["tool_input"]
         if not tool_input:
             raise ValueError("You are using the send_message tool without providing a message to send. To make this work you first need to write the message then use this tool. Do not write the message in a file or it will not work")
-        
+
         if tool_input.endswith('.txt'):
             raise ValueError("You are using the send_message tool with a file. This tool does not work with files, you need to write a regular message, not provide a file")
-        
+
         return values
 
 class InstagramGetPostsSchema(BaseModel):
@@ -106,7 +107,7 @@ class InstagramCommentInputSchema(BaseModel):
 
 # Functions for Instragram using instagrapi methods
 # https://github.com/adw0rd/instagrapi/
- 
+
 # Custom instagrapi client to load and dump settings from and to an object
 class CustomClient(Client):
     def load_settings_from_object(self, settings):
@@ -130,7 +131,7 @@ class InstagramTool:
         self.target_username = target_username
         self.posts = None
         self.llm = OpenAI(model_name="text-davinci-003", openai_api_key=os.getenv('OPENAI_API_KEY'))
-        
+
         # Load session from cache
         session_key = f"{username}_session"
         session_data = self.cache.get(session_key)
@@ -165,6 +166,7 @@ class InstagramTool:
             print("User ID retrieved from cache")
         else:
             self.user_id = self.client.user_id_from_username(target_username)
+            cache.set(user_id_key, self.user_id, timeout=VERY_LONG_TIMEOUT)
             cache.set(user_id_key, self.user_id, timeout=VERY_LONG_TIMEOUT)  
             user_id = cache.get(user_id_key)
             print("User ID retrieved from Instagram and saved to cache")
@@ -179,7 +181,7 @@ class InstagramTool:
         # Initialize last_message_id and thread_id as None
         self.last_message_id = None
         self.thread_id = None
-                
+
         # Initialize follow count
         self.follow_count = 0
         self.follow_reset_time = datetime.now() + timedelta(days=1)
@@ -217,12 +219,12 @@ class InstagramTool:
             tool_input = InstagramSendInputSchema(tool_input=tool_input)
         message = tool_input.tool_input
         print(f"Arguments: {tool_input}")
-        
+
         # Check if the message is empty
         if not message:
             return "You did not write a message to send, in order to use this tool you need to write a message to the user, try again please"
         print(f"Message: {message}")  # Log the message
-        
+
         # Check if the message is the same as the last sent message
         if message == self.last_sent_message:
             print("Message is the same as the last sent message. Skipping sending. Did you wait for the user reply? Suggest using instagram_receive")
@@ -239,7 +241,7 @@ class InstagramTool:
             self.last_sent_timestamp = thread.messages[0].timestamp
             print("Message sent successfully")
             return  "Message sent successfully"
-        
+
         except ClientError as e:
             print('Message failed')
             print(e)
@@ -366,14 +368,14 @@ class InstagramTool:
         except Exception as e:
             return f"Error commenting on post: {e}"
 
-# AutoGPT lauched by Langchain   
+# AutoGPT lauched by Langchain
 def run_autogpt(goal, username, password, target_username, cache):
     print("Setting up tools for AutoGPT")
-    
+
     if cache is None:
         print("Error: Unable to connect to the Redis server.")
         exit(1)
-    
+
     # Set up tools for AutoGPT
     search = SerpAPIWrapper()
 
@@ -389,7 +391,7 @@ def run_autogpt(goal, username, password, target_username, cache):
     else:
         try:
             profile_info = instagram_tool.client.user_info(instagram_tool.client.user_id)
-            cache.set(profile_info_key, profile_info, timeout=VERY_LONG_TIMEOUT)  
+            cache.set(profile_info_key, profile_info, timeout=VERY_LONG_TIMEOUT)
             print("Profile information retrieved from Instagram and saved to cache")
         except Exception as e:
             print(f"Failed to retrieve profile information: {e}")
@@ -464,7 +466,7 @@ def run_autogpt(goal, username, password, target_username, cache):
        )
     agent.chain.verbose = True
 
-    # Run AutoGPT with your goal 
+    # Run AutoGPT with your goal
     print("Running AutoGPT...")
     agent.run([goal])
 
@@ -479,8 +481,96 @@ def run_profile_edit(username, password, target_username, cache, **kwargs):
     instagram_tool.edit_account(**kwargs)
 
 
+def read_image(image_url: str) -> str:
+    try:
+        HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY')
+        API_URL = "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning"
+        headers = {"Authorization": f"Bearer {HUGGING_FACE_API_KEY}"}
+        response = requests.post(API_URL, headers=headers, data=image_url)
+        response_json = response.json()
+        return response_json[0]["generated_text"]
+    except Exception as e:
+        print(f"Image description from Hugging Face failed due to error: {e}")
+        print("Getting Image description from image-to-caption.io endpoint")
+        try:
+            return read_image_by_io_endpoint(image_url)
+        except Exception as e:
+            print(f"Image description from io endpoint failed due to error: {e}")
+
+    return ""
+
+def read_image_by_io_endpoint(image_url: str) -> str:
+
+    ENDPOINT_URL = "https://image-to-caption.io/api/v1/description"
+
+    payload = json.dumps({
+        "imageUrl": image_url
+    })
+
+    headers = {
+        'authority': 'image-to-caption.io',
+        'accept': '/',
+        'accept-language': 'en-US,en;q=0.9',
+        'cache-control': 'no-cache',
+        'content-type': 'application/json',
+        'cookie': '_ga=GA1.1.991307832.1690024023; _ga_9ELLC7L1NQ=GS1.1.1690024022.1.1.1690026865.0.0.0',
+        'origin': 'https://image-to-caption.io',
+        'pragma': 'no-cache',
+        'referer': 'https://image-to-caption.io/',
+        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+        'x-csrftoken': 'Ud7UiwLDNHWqiFTwFW1vukOJcMYEULIL'
+    }
+
+    response = requests.request("POST", ENDPOINT_URL, headers=headers, data=payload)
+
+    response_json = json.loads(response.text)
+
+    return response_json["description"]
+
+def generate_instagram_caption(image_description: str, use_emoji: bool = True) -> list:
+
+    ENDPOINT_URL = "https://image-to-caption.io/api/v1/captions"
+
+    payload = json.dumps({
+        "description": image_description,
+        "useEmoji": use_emoji
+    })
+    headers = {
+        'authority': 'image-to-caption.io',
+        'accept': '/',
+        'accept-language': 'en-US,en;q=0.9',
+        'cache-control': 'no-cache',
+        'content-type': 'application/json',
+        'cookie': '_ga=GA1.1.991307832.1690024023; _ga_9ELLC7L1NQ=GS1.1.1690024022.1.1.1690026865.0.0.0',
+        'origin': 'https://image-to-caption.io',
+        'pragma': 'no-cache',
+        'referer': 'https://image-to-caption.io/',
+        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+        'x-csrftoken': 'Ud7UiwLDNHWqiFTwFW1vukOJcMYEULIL'
+    }
+
+    response = requests.request("POST", ENDPOINT_URL, headers=headers, data=payload)
+
+    response_json = json.loads(response.text)
+
+    return response_json["captions"]
+
 if __name__ == "__main__":
 
+    # Set your goal as a natural language string
+    #goal = "Engage in a conversation with an Instagram user"
 
     # instagram_tool = InstagramTool(username, password, target_username, cache=cache)
     # instagram_tool.get_posts_from_followers(3)
@@ -513,10 +603,17 @@ if __name__ == "__main__":
     ######## find posts from people you follow.
     # Set your goal as a natural language stringf
     goal = "Find 2 recents posts from among your followers and leave a comment"
-    
+
     # Create a thread for AutoGPT
-    autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
-    autogpt_thread.start()
+    #autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
+    #autogpt_thread.start()
+
+    #Test image reading functions
+    img_url = "./cat.jpg"
+    print(read_image(img_url))
+    image_desc = read_image_by_io_endpoint(img_url)
+    print(image_desc)
+    print(generate_instagram_caption(image_desc))
 
 
 
