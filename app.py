@@ -441,11 +441,11 @@ if __name__ == "__main__":
     #autogpt_thread.start()
 
     #Test image reading functions
-    #img_url = "https://cdn.lcieducation.com/-/media/images/responsive/collegelasalle_montreal/programs/mode_art_design/fashion-design-course-1920x1080.jpg"
-    #print(read_image(img_url))
-    #image_desc = read_image_by_io_endpoint(img_url)
-    #print(image_desc)
-    #print(generate_instagram_caption(image_desc))
+    img_url = "./cat.jpg"
+    print(read_image(img_url))
+    image_desc = read_image_by_io_endpoint(img_url)
+    print(image_desc)
+    print(generate_instagram_caption(image_desc))
 
     # Start server
     app.run(debug=False)
