@@ -1,4 +1,6 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
+
 import "./LandingImages.css"
 const LandingImages = () => {
   return (
@@ -14,10 +16,18 @@ const LandingImages = () => {
             </div>
             <div className='mt-5'>
             <h2 className='main-headin'>Being and Influencer has never been so easy!</h2>
+
             <div className='btn-landing'>
-            <button className='start-btn btn btn-primary m-2'> Start For Free</button>
-            <button className='login-btn btn btn-primary m-2'>Login</button>
+              
+                  <button className='start-btn btn btn-primary m-2'>
+                    <Link to="/register" style={{ color: 'inherit', textDecoration: 'inherit'}}>Start For Free</Link>
+                  </button>
+
+                  <button className='login-btn btn btn-primary m-2'>
+                    <Link to="/login" style={{ color: 'inherit', textDecoration: 'inherit'}}>Login</Link>
+                  </button>
             </div>
+
             </div>
            
             

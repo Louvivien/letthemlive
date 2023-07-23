@@ -1,7 +1,11 @@
 import React,{useState} from 'react'
+import { useNavigate } from 'react-router-dom';
+
 import "./RegisterForm.css"
 
 const RegisterForm = () => {
+
+    const navigate = useNavigate();
 
     const [userDetails, setuserDetails] = useState({
         fullName:"",
@@ -11,7 +15,10 @@ const RegisterForm = () => {
     })
 
     const handleRegister=(e)=>{
-        e.preventDefault();
+      e.preventDefault();
+      // Add your registrer logic here
+      // If register is successful, navigate to the dashboard
+      navigate('/dashboard');
     }
 
     const handleChange=(e)=>{

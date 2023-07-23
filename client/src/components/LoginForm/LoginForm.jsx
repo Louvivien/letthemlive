@@ -1,7 +1,12 @@
 import React,{useState} from 'react'
+import { useNavigate } from 'react-router-dom';
+
 import "./LoginForm.css"
 
 const LoginForm = () => {
+
+  const navigate = useNavigate();
+
 
     const [userDetails, setuserDetails] = useState({
         email:"",
@@ -18,8 +23,11 @@ const LoginForm = () => {
         setuserDetails((prev)=>({...prev,[e.target.name]:e.target.value}));
     }
 
-    const handleLogin=(e)=>{
-        e.preventDefault();
+    const handleLogin = (e) => {
+      e.preventDefault();
+      // Add your login logic here
+      // If login is successful, navigate to the dashboard
+      navigate('/dashboard');
     }
   return (
     <div className='register-form-container'>
