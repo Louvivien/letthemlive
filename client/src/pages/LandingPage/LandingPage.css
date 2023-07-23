@@ -1,0 +1,9 @@
+
+/* .landing-container{
+    height: 100vh;
+} */
+.landing-container{
+    background: linear-gradient( #a620a4, #311361);
+    background-size: cover;
+    background-attachment: fixed;
+}

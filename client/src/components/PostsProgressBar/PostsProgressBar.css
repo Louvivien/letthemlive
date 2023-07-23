@@ -1,0 +1,19 @@
+.progress-container{
+    width: 330px;
+}
+.progress-bar-container{
+    height: 7px;
+}
+.count-container{
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.post-title{
+    font-size: 13px;
+   
+}
+.posts-count{
+    font-size: 13px;
+}

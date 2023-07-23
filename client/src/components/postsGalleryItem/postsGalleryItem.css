@@ -1,0 +1,24 @@
+.images-gallery{
+    display: flex;
+    
+}
+.vertical-img{
+    width: 150px;
+    /* width: 100%; */
+    height:300px;
+    margin: 10px;
+}
+.images-flex{
+    display: flex;
+    flex-direction: column;
+}
+
+.image-container{
+    display: inline-block;
+    /* width: 30%; */
+}
+.vertical-half{
+    width: 150px;
+    height:140px;
+    margin: 10px;
+}

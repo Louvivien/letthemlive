@@ -1,0 +1,23 @@
+.img-landing{
+    border-radius: 10px;
+    margin: 10px;
+}
+.btn-landing{
+    display: flex;
+    flex-direction: column;
+    width: 150px;
+    margin: 10px;
+}
+.main-headin{
+    color: white;
+    position: relative;
+    width: 350px;
+    text-align: center;
+    /* text-align: center; */
+}
+.left-main-image2{
+    position: relative;
+    right: 50px;
+    top: 40px;
+}
+

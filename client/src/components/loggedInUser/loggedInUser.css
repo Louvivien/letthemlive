@@ -1,0 +1,19 @@
+.loggedin-img{
+    width: 50px;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+.loggedin-container{
+    display: flex;
+    align-items: center;
+    justify-content: end;
+}
+.Online-dot{
+    background-color: green;
+    width: 10px;
+    border-radius: 100%;
+    height: 10px;
+    position: relative;
+    bottom: 10px;
+    left: 47px;
+}

@@ -1,0 +1,15 @@
+
+.influencer-head{
+    font-size: clamp(7px,5vw,20px);
+
+}
+.influencers-container{
+    /* padding: 10px; */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: start;
+    flex-direction: column;
+    text-align: center;
+
+}

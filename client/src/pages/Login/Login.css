@@ -1,0 +1,58 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+  }
+
+  .register-section {
+    display: flex;
+    height: 100%;
+  }
+  
+  .left-side {
+    width: 70%;
+    height: 100vh;
+    background-image: url('../../../public/images/register.png'); /* Replace with your image path */
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .right-side {
+    width: 30%;
+   background: radial-gradient(circle, #a620a4, #311361) ;/* Replace with your desired gradient colors */
+    /* background: linear-gradient(to right, #311361, #a620a4); Replace with your desired gradient colors */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .register-form-section{
+    position: relative;
+    right: 200px;
+  }
+  
+  /* Style your form and other content as needed */
+  .right-side h2 {
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  /* Add additional styling for form fields and buttons as required */
+
+  .brand-logo-container{
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    color: white;
+  
+
+    top: 0px;
+    left: 15px;
+    padding: 10px;
+    height: 70px;
+    border-radius: 20px;
+  }
