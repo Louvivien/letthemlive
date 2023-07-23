@@ -40,9 +40,7 @@ load_env()
 username = os.getenv('INSTA_USERNAME')
 password = os.getenv('INSTA_PASSWORD')
 target_username = os.getenv('TARGET_USERNAME')
-if not os.getenv('CACHE_REDIS_URL'):
-    print("Error: The CACHE_REDIS_URL environment variable is not set.")
-    exit(1)
+
 
 # Set up Flask server and Cache
 app = Flask(__name__, static_folder='../client/build')
