@@ -501,25 +501,35 @@ if __name__ == "__main__":
     # profile_edit_thread.start()
 
 
-    # ######## search and follow
-    # # Set your goal as a natural language string
-    # goal = "Search for 5 profiles related to fashion account and follow them."
-    
-    # # Create a thread for AutoGPT
-    # autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
-    # autogpt_thread.start()
-
-
-    ######## find posts from people you follow.
-    # Set your goal as a natural language stringf
-    goal = "Find 2 recents posts from among your followers and leave a comment"
+    ####### search and follow
+    #Set your goal as a natural language string
+    goal = "Search for 3 profiles related to cooking and travelling account and follow them."
     
     # Create a thread for AutoGPT
     autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
     autogpt_thread.start()
 
 
+    # ####### find posts from people you follow.
+    # #Set your goal as a natural language stringf
+    # goal = "Find 2 recents posts from among your followers and leave a comment"
+    
+    # #Create a thread for AutoGPT
+    # autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
+    # autogpt_thread.start()
+
+    # ####### Using all the features together
+    # #Set your goal as a natural language stringf
+    # goal = f"""Follow following sets of steps:
+    #     1. find 5 accounts related to cooking and travelling
+    #     2. find 3 posts from among your followers.
+    #     3. Leave a comments on those posts. 
+    #     4. repeat step one again after 2 minutes."""
+    
+    # #Create a thread for AutoGPT
+    # autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
+    # autogpt_thread.start()
 
 
     # Start server
-    app.run(debug=False)
+    app.run(debug=True)
