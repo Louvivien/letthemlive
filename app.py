@@ -15,6 +15,7 @@ from langchain.docstore import InMemoryDocstore
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.experimental import AutoGPT
 from langchain.chat_models import ChatOpenAI
+from langchain.llms import OpenAI
 from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field, root_validator
 import faiss
@@ -23,7 +24,7 @@ import random
 from flask import Flask, render_template
 from flask_caching import Cache
 import threading
-
+import random
 
 
 # Load .env file
@@ -84,6 +85,25 @@ class InstagramSendInputSchema(BaseModel):
 
         return values
 
+class InstagramGetPostsSchema(BaseModel):
+    tool_input: int = Field(description="count of numbers to posts to return")
+
+
+class InstagramLikePostsSchema(BaseModel):
+    tool_input: list = Field(description="list of posts that needs to be liked.")
+    
+    @root_validator
+    def validate_input(cls, values: Dict[str, Any]) -> Dict:
+        tool_input = values["tool_input"]
+        if type(tool_input) != list:
+            raise ValueError("You are using the like_post tool without providing a list type argument. To make this work you need to provide list of integers. For example: [3052787801845186036, 2877751288856163701]")
+              
+        return values
+
+
+class InstagramCommentInputSchema(BaseModel):
+    post_id: str
+    comment_text: str
 
 # Functions for Instragram using instagrapi methods
 # https://github.com/adw0rd/instagrapi/
@@ -109,6 +129,8 @@ class InstagramTool:
         self.client.delay_range = [1, 3]
         self.cache = cache
         self.target_username = target_username
+        self.posts = None
+        self.llm = OpenAI(model_name="text-davinci-003", openai_api_key=os.getenv('OPENAI_API_KEY'))
 
         # Load session from cache
         session_key = f"{username}_session"
@@ -145,6 +167,8 @@ class InstagramTool:
         else:
             self.user_id = self.client.user_id_from_username(target_username)
             cache.set(user_id_key, self.user_id, timeout=VERY_LONG_TIMEOUT)
+            cache.set(user_id_key, self.user_id, timeout=VERY_LONG_TIMEOUT)  
+            user_id = cache.get(user_id_key)
             print("User ID retrieved from Instagram and saved to cache")
         if user_id is None:
             print("Error: Unable to get the user ID from the cache.")
@@ -190,7 +214,6 @@ class InstagramTool:
             else:
                 print('Follow failed')
 
-
     def send_message(self, tool_input: InstagramSendInputSchema):
         if isinstance(tool_input, str):
             tool_input = InstagramSendInputSchema(tool_input=tool_input)
@@ -222,7 +245,6 @@ class InstagramTool:
         except ClientError as e:
             print('Message failed')
             print(e)
-
 
     def receive_message(self, tool_input: Optional[str] = None):
         print("Waiting for reply...")
@@ -264,7 +286,87 @@ class InstagramTool:
         print("No reply received after 3 attempts.")
         return "No reply received yet. Suggest checking again in one hour."
 
+    def edit_account(self, **kwargs):
+        print(f"Changing following account data: {', '.join(kwargs.keys())}")
+        try:
+            self.client.account_edit(**kwargs)
+            print("Account data changed successfully")
+        except Exception as e:
+            print(f"Error while changing account details: {e}")
 
+    def search_and_follow(self, tool_input):
+        query = tool_input
+        users = self.client.search_users(query)
+        followed = 0
+        users = users[:3]
+        for user in users:
+            try:
+                self.client.user_follow(user.pk)
+                followed += 1
+            except Exception as e:
+                print(f"Failed to follow {user.username}: {e}")
+
+        return f"Followed {followed} user(s) from the search results."
+
+    def search_posts_by_keywords(self, tool_input, count=1):
+        try:
+            results = self.client.search(tool_input, 'posts', count)
+            return results
+        except Exception as e:
+            return f"Error searching posts: {e}"
+        
+    def generate_comment(self, caption_text):
+        prompt = f"Write a unique and engaging comment based on the following Instagram caption: {caption_text}"
+        comment = self.llm(prompt, max_tokens=30)
+        return comment
+    
+    def get_posts_from_followers(self, tool_input=3):
+        try:
+            count = int(tool_input)
+            following_users = self.client.user_following(self.client.user_id)
+            following_users_ids = [i for i in following_users.keys()]
+            posts = []
+
+            # get 1 random post from count(default=3) number of followers
+            following_users_ids = random.sample(following_users_ids, count)
+            for user in following_users_ids:
+                # fetch 10 recent posts and pick 1 random post.
+                user_posts = self.client.user_medias(user, 10)
+                posts.append(random.choice(user_posts))
+            self.posts = posts
+            post_ids = [int(p.pk )for p in posts]
+            # like all the collected posts
+            self.like_post(post_ids)
+            print(f'{count} post(s) found from your followers. Their ids are as followes: {post_ids}')
+
+            return {int(p.pk):p.caption_text for p in self.posts}
+        except Exception as e:
+            return f"Error getting posts from following: {e}"
+    
+    def like_post(self, tool_input):
+        ## TODO chache all the ids of the already liked post to avoid them in next loop
+        try:
+            post_ids = tool_input
+            for post_id in post_ids:
+                self.client.media_like(post_id)
+                print (f"Post {post_id} liked successfully.")
+        except Exception as e:
+            return f"Error liking post: {e}"
+
+    def comment_on_post(self, tool_input: Optional[str] = None):
+        '''
+        fetches posts from self.posts and add comments to those posts. Make sure to call 
+        self.posts is not empty.
+        '''
+        try:
+            if self.posts:
+                for post in self.posts:
+                    # generate a comment using the text in post.caption_text
+                    comment_text = self.generate_comment(post.caption_text)
+                    self.client.media_comment(post.pk, comment_text)
+                    return "Comment posted successfully."
+        except Exception as e:
+            return f"Error commenting on post: {e}"
 
 # AutoGPT lauched by Langchain
 def run_autogpt(goal, username, password, target_username, cache):
@@ -321,7 +423,31 @@ def run_autogpt(goal, username, password, target_username, cache):
                 name="instagram_receive",
                 func=instagram_tool.receive_message,
                 description="Tool for receiving messages from a user on Instagram."
-            )
+            ),
+            Tool(
+                name="instagram_search_follow",
+                func=instagram_tool.search_and_follow,
+                description="Tool for searching Instagram accounts by query and following a specified number of them."
+            ),
+            Tool(
+                name="instagram_get_posts_from_followers",
+                func=instagram_tool.get_posts_from_followers,
+                args_schema=InstagramGetPostsSchema,
+                description="Tool for getting a specified number of posts from users the account is following on Instagram."
+            ),
+            # commenting out this tool to prevent autoGPT from making additional call to 
+            # like_post tool. The posts would be automatcally liked as a part of get_posts_from_followers tool.
+            # Tool(
+            #     name="instagram_like",
+            #     func=instagram_tool.like_post,
+            #     args_schema=InstagramLikePostsSchema,
+            #     description="Tool for liking posts on Instagram given their post_ids as a list."
+            # ),
+            Tool(
+                name="instagram_comment",
+                func=instagram_tool.comment_on_post,
+                description="Tool for commenting on a post on Instagram. Use text returned from get_posts_from_followers_and_like and write a comment using that.  Make sure to call get_posts_from_followers_and_like before it."
+            ),
         ]
 
     # Langchain: set up memory for AutoGPT
@@ -343,6 +469,16 @@ def run_autogpt(goal, username, password, target_username, cache):
     # Run AutoGPT with your goal
     print("Running AutoGPT...")
     agent.run([goal])
+
+def run_profile_edit(username, password, target_username, cache, **kwargs):
+    print("Editing Account Details")
+
+    if cache is None:
+        print("Error: Unable to connect to the Redis server.")
+        exit(1)
+
+    instagram_tool = InstagramTool(username, password, target_username, cache=cache)
+    instagram_tool.edit_account(**kwargs)
 
 
 def read_image(image_url: str) -> str:
@@ -436,6 +572,38 @@ if __name__ == "__main__":
     # Set your goal as a natural language string
     #goal = "Engage in a conversation with an Instagram user"
 
+    # instagram_tool = InstagramTool(username, password, target_username, cache=cache)
+    # instagram_tool.get_posts_from_followers(3)
+    
+    # ######## Conversation
+
+    # # Set your goal as a natural language string
+    # goal = "Engage in a conversation with an Instagram user"
+    
+    # # Create a thread for AutoGPT
+    # autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
+    # autogpt_thread.start()
+     
+    ######## Edit profile
+
+    # Creating a thread to test changing account details
+    # profile_edit_thread = threading.Thread(target=run_profile_edit, args=(username, password, target_username, cache), kwargs={'biography': "Whatever to put here", 'full_name': "Any new name", 'external_url': "http://feedlink.io/"})
+    # profile_edit_thread.start()
+
+
+    # ######## search and follow
+    # # Set your goal as a natural language string
+    # goal = "Search for 5 profiles related to fashion account and follow them."
+    
+    # # Create a thread for AutoGPT
+    # autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
+    # autogpt_thread.start()
+
+
+    ######## find posts from people you follow.
+    # Set your goal as a natural language stringf
+    goal = "Find 2 recents posts from among your followers and leave a comment"
+
     # Create a thread for AutoGPT
     #autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
     #autogpt_thread.start()
@@ -446,6 +614,9 @@ if __name__ == "__main__":
     image_desc = read_image_by_io_endpoint(img_url)
     print(image_desc)
     print(generate_instagram_caption(image_desc))
+
+
+
 
     # Start server
     app.run(debug=False)
