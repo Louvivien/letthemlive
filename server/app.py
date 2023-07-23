@@ -583,7 +583,7 @@ if __name__ == "__main__":
     # instagram_tool = InstagramTool(username, password, target_username, cache=cache)
     # instagram_tool.get_posts_from_followers(3)
     
-    # ######## Conversation
+    ######## Conversation
 
     # # Set your goal as a natural language string
     # goal = "Engage in a conversation with an Instagram user"
@@ -598,7 +598,6 @@ if __name__ == "__main__":
     # profile_edit_thread = threading.Thread(target=run_profile_edit, args=(username, password, target_username, cache), kwargs={'biography': "Whatever to put here", 'full_name': "Any new name", 'external_url': "http://feedlink.io/"})
     # profile_edit_thread.start()
 
-
     # ######## search and follow
     # # Set your goal as a natural language string
     # goal = "Search for 5 profiles related to fashion account and follow them."
@@ -607,22 +606,17 @@ if __name__ == "__main__":
     # autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
     # autogpt_thread.start()
 
-
     ######## find posts from people you follow.
     # Set your goal as a natural language stringf
-    goal = "Find 2 recents posts from among your followers and leave a comment"
-
-    # Create a thread for AutoGPT
-    #autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
-    #autogpt_thread.start()
-
+    # goal = "Find 2 recents posts from among your followers and leave a comment"
+    
+    ######## Work in progress
     #Test image reading functions
-    img_url = "./cat.jpg"
-    print(read_image(img_url))
-    image_desc = read_image_by_io_endpoint(img_url)
-    print(image_desc)
-    print(generate_instagram_caption(image_desc))
-
+    # img_url = "./cat.jpg"
+    # print(read_image(img_url))
+    # image_desc = read_image_by_io_endpoint(img_url)
+    # print(image_desc)
+    # print(generate_instagram_caption(image_desc))
 
 
 
