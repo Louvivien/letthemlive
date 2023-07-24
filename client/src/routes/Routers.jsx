@@ -4,8 +4,9 @@ import { Router,Routes, Route, Navigate,useNavigate } from "react-router-dom";
 import Login from "../pages/Login/Login.jsx";
 import Register from "../pages/Register/Register.jsx";
 import Dashboard from "../pages/Dashboard/Dashboard.jsx";
-// import Dashboard from "../pages/Dashboard/LandingPage.jsx";
 import LandingPage from "../pages/LandingPage/LandingPage.jsx";
+import Auth from "../pages/Auth/Auth.jsx";
+
 
 
 const Routers = () => {
@@ -22,6 +23,7 @@ const Routers = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/" element={<LandingPage />} />
+      <Route path="/auth" element={<Auth />} />
     </Routes>
   );
 }

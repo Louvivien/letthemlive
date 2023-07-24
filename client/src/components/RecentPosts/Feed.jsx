@@ -7,12 +7,12 @@ const Feed = () => {
     {
       img1:"/images/image4@2x.png",
       img2:"/images/image1@2x.png",
-      img3:"/images/image2@2x.png"
+      img3:"/images/image@2x.png"
     },
     {
-      img1:"/images/image4@2x.png",
-      img2:"/images/image1@2x.png",
-      img3:"/images/image2@2x.png"
+      img1:"/images/image3@2x.png",
+      img2:"/images/image2@2x.png",
+      img3:"/images/image5@2x.png"
     }
   ])
   return (
