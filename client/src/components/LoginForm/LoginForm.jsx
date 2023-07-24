@@ -45,7 +45,7 @@ const LoginForm = () => {
         <button className='signup-social-btn'>
         <img src='images/facebook.png' className='signup-icons' />
             <span className='social-heading'>
-            Signin with Google
+            Signin with Facebook
             </span>
         </button>
         </div>
@@ -100,7 +100,7 @@ const LoginForm = () => {
     
     </div>
 
-        <button type="submit" className='btn btn-primary register-btn'>Signin Now</button>
+        <button type="submit" className='btn btn-primary register-btn'>Sign In</button>
       </form>
       <div>
         <span className='have-acc'>Don't have an account? <a>Register Now</a></span>
