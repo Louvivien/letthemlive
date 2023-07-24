@@ -40,7 +40,7 @@ const RegisterForm = () => {
         <button className='signup-social-btn'>
         <img src='images/facebook.png' className='signup-icons' />
             <span className='social-heading'>
-            Signup with Google
+            Signup with Facebook
             </span>
         </button>
         </div>
