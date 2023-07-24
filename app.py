@@ -646,14 +646,17 @@ if __name__ == "__main__":
     #autogpt_thread.start()
 
     #Test image reading functions
-    img_url = "./cat.jpg"
-    print(read_image(img_url))
-    image_desc = read_image_by_io_endpoint(img_url)
-    print(image_desc)
-    print(generate_instagram_caption(image_desc))
-
-
-
-
+    #img_url = "./cat.jpg"
+    #print(read_image(img_url))
+    #image_desc = read_image_by_io_endpoint(img_url)
+    #print(image_desc)
+    #print(generate_instagram_caption(image_desc))
+    ##########
+    # You can use:
+    # @app.route('/api/process', methods=['POST']) 
+    # give it the image url or an image, it return a json with the description of the image
+    #If you don't want use the route, u can call internally for 
+    # read_image_by_io_endpoint(image_url: str):
+    # All the method are working, u can test from outside or locally
     # Start server
     app.run(debug=False)
