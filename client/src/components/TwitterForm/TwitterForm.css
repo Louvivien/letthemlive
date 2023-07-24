@@ -1,0 +1,295 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+}
+.flex1{
+  /*border: 1px solid black;*/
+  /*display: flex;*/
+  /*  justify-content: space-between;*/
+  display: flex;
+  flex-direction: column; /* Arrange elements in a column */
+  justify-content: space-between; /* Space between elements (or use 'flex-start' or 'flex-end' as needed) */
+  align-items: flex-start; /* Align items along the start (left) of the container */
+}
+.dm-sans-paragraph {
+  font-family: 'DM Sans', sans-serif;
+  /* Optionally, you can add other styling for the paragraph */
+}
+
+
+.ele1{
+  font-family: 'DM Sans', sans-serif;;
+}
+.ele2{
+  align-self: flex-end;
+}
+/*=====================================*/
+.flex2 {
+  display: flex;
+}
+
+.main_container {
+  flex: 1;
+  /*border: 1px solid green;*/
+}
+.box1{
+  position: relative;
+}
+.inlogin{
+  text-align: center; /* Center the text horizontally within the h3 element */
+  position: absolute;
+  top:22%; /* Position the element 50% from the top of the .main_container */
+  left: 47%; /* Position the element 50% from the left of the .main_container */
+  transform: translate(-50%, -50%);
+}
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh;
+}
+.container .col .box {
+  width: 350px;
+  height: 380px;
+  border: 1px solid rgba(219, 219, 219, 1);
+  background: white;
+  border-radius: 1px;
+  margin: 0 0 10px;
+  padding: 10px 0;
+  z-index: 2;
+}
+.container .col .box .title {
+  position: relative;
+  top: 5px;
+  text-align: center;
+}
+.container .col.content {
+  position: relative;
+  top: 12px;
+}
+.container .col .box .title img {
+  width: 190px;
+  height: 80px;
+}
+.container .col .box .login-form {
+  position: relative;
+  height: 260px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.container .col .box .login-form .form-content {
+  position: relative;
+  margin: 5px 0;
+  top: 22px;
+}
+.container .col .box .login-form label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 9px;
+  font-size: 12px;
+  color: rgba(142, 142, 142, 1);
+  pointer-events: none;
+  order: -1;
+  transition: 0.3s ease;
+}
+.container .col .box .login-form input {
+  background: transparent;
+  width: 270px;
+  height: 40px;
+  background: rgba(250, 250, 250, 1);
+  border: 1px solid rgba(219, 219, 219, 1);
+  border-radius: 3px;
+  padding: 9px 0 7px 8px;
+  font-size: 14px;
+  transition: 0.3s ease;
+}
+.container .col .box .login-form input:valid {
+  padding-bottom: 0;
+}
+.container .col .box .login-form input:valid + label {
+  transform: translateY(-16px);
+  font-size: 10px;
+}
+.container .col .box .login-form button {
+  width: 270px;
+  height: 30px;
+  border: none;
+  outline: none;
+  border-radius: 4px;
+  background-color: rgba(0, 149, 246, 0.3);
+  color: white;
+}
+
+.container .col .box .login-form .form-ending {
+  position: relative;
+  width: 270px;
+  margin-top: 20px;
+  text-align: center;
+}
+.container .col .box .login-form .form-ending #OR {
+  color: rgba(142, 142, 142, 1);
+  background: white;
+  text-align: center;
+  width: 50px;
+  margin: 15px 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 15px;
+  z-index: 3;
+  position: relative;
+  display: block;
+}
+.container .col .box .login-form .form-ending #line {
+  z-index: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 22px;
+  width: 270px;
+  height: 1px;
+  background: rgba(219, 219, 219, 1);
+}
+.container .col .box .login-form .form-ending p#facebook {
+  color: #385185;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 15px;
+}
+.container .col .box .login-form .form-ending p#facebook i {
+  margin-right: 8px;
+  font-size: 16px;
+  position: relative;
+  top: 1px;
+}
+.container .col .box .login-form .form-ending a {
+  position: relative;
+  top: 15px;
+  text-decoration: none;
+  color: rgba(0, 55, 107, 1);
+  font-size: 12px;
+  line-height: 14px;
+  text-align: center;
+}
+/* mini box  */
+.container .col .mini-box {
+  width: 350px;
+  height: 65px;
+  background: white;
+  border: 1px solid rgba(219, 219, 219, 1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.container .col .mini-box .text {
+  font-size: 14px;
+  color: rgba(38, 38, 38, 1);
+}
+.container .col .mini-box .text a {
+  text-decoration: none;
+  color: #0095f6;
+  font-weight: 400;
+}
+.container .col .download-section {
+  margin-top: 20px;
+  width: 350px;
+  height: 100px;
+  text-align: center;
+}
+.container .col .download-section p {
+  font-size: 14px;
+  line-height: 18px;
+}
+.container .col .download-section .images {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.container .col .download-section .images img {
+  width: 135px;
+  height: 40px;
+}
+
+
+
+.container_tw{
+
+/*width: 450px;*/
+height: 100%;
+box-shadow: 0 10px rgb(110, 110, 110,.2);
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+font-family: 'Poppins', sans-serif;
+}
+.boxy, .boxy button{
+display: flex;
+align-items: center;
+}
+.boxy{
+width: 300px;
+height: 240px;
+flex-direction: column;
+justify-content: space-evenly;
+}
+.boxy button{
+width: 300px;
+height: 40px;
+background-color: #fff;
+outline: none;
+font-weight: bold;
+border: 1px solid rgb(211, 210, 210);
+border-radius: 20px;
+justify-content: center;
+font-family: 'Poppins', sans-serif;
+}
+.box-one button img{
+margin: 0 .5rem;
+}
+.box-one i{
+color: #00acee;
+font-size: 1.8rem;
+}
+.box-two input{
+position: relative;
+width: 300px;
+height: 55px;
+outline: none;
+border: 1px solid rgb(211, 210, 210);
+border-radius: 4px;
+padding-left: 10px;
+
+}
+.box-two input label{
+position: absolute;
+top: 0;
+}
+.box-two input::placeholder{
+font-size: 1rem;
+}
+.box-two input:focus{
+border: 1px solid #00acee;
+}
+.box-two .next-btn{
+background-color: #121212;
+color: #fff;
+}
+.container_tw p{
+font-size: .7rem;
+color: rgb(138, 136, 136);
+}
+.container_tw p a{
+text-decoration: none;
+color: #00acee;
+}
+
+
+

@@ -8,20 +8,42 @@ body{
 }
 .dashboard-container{
     width: 100%;
-    /* border: 2px solid black; */
     display: flex;
-}
 
+    /* flex-direction: column; */
+}
+.loggedInUser{
+    /* position: relative; */
+  
+}
 .sidebar-section{
     
     /* border: 1px solid red; */
     width: 7vw;
-    background-color: rgb(39, 2, 75) !important;
+    background-color:white !important;
     height: 100vh;
+    outline: none;
+    background: transparent !important;
    
 
 }
 .influencer-section{
     width: 93vw;
-    /* border: 2px solid blueviolet; */
+    display: flex;
+    flex-direction: column;
+
+}
+/* .recent-text{
+    position: relative;
+    right: 38vw;
+} */
+.feed-calendar {
+    display: flex;
+    justify-content: space-between !important;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.feed-container{
+    margin-right: 40px;
 }
