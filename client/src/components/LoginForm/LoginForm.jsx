@@ -1,4 +1,5 @@
 import React,{useState} from 'react'
+import { Link, useNavigate } from "react-router-dom";
 import "./LoginForm.css"
 
 const LoginForm = () => {
@@ -29,7 +30,7 @@ const LoginForm = () => {
         <button className='signup-social-btn'>
         <img src='images/google.png' className='signup-icons' />
             <span className='social-heading'>
-            Signin with Google
+            Sign in with Google
             </span>
             
         </button>
@@ -37,13 +38,13 @@ const LoginForm = () => {
         <button className='signup-social-btn'>
         <img src='images/facebook.png' className='signup-icons' />
             <span className='social-heading'>
-            Signin with Google
+            Sign in with Facebook
             </span>
         </button>
         </div>
        
       </div>
-      <h5 className='option-register'>--OR--</h5>
+      <h5 className='option-register'>-- OR --</h5>
       <form onSubmit={handleLogin}>
         <div>
           <input
@@ -92,10 +93,10 @@ const LoginForm = () => {
     
     </div>
 
-        <button type="submit" className='btn btn-primary register-btn'>Signin Now</button>
+        <button type="submit" className='btn btn-primary register-btn'>Sign in</button>
       </form>
       <div>
-        <span className='have-acc'>Don't have an account? <a>Register Now</a></span>
+        <span className='have-acc'>Don't have an account? <Link to="/register">Sign up Now</Link></span>
       </div>
 
     </div>
