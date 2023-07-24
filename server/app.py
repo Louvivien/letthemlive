@@ -65,6 +65,22 @@ def serve(path):
         print(f"Serving index.html from {app.static_folder}")
         return send_from_directory(app.static_folder, 'index.html')
     
+    
+
+# Task to keep the server active
+def do_nothing():
+    print("Keeping server awake...")
+    # This is where you'd put the task you want to run.
+    # Since you want to do nothing, we'll just pass.
+    pass
+
+def schedule_do_nothing():
+    # Schedule do_nothing to be called after 12 minutes (720 seconds)
+    threading.Timer(720, schedule_do_nothing).start()
+
+    # Call the function
+    do_nothing()
+
 
 ## Tool to clear cache
 # http://127.0.0.1:5000/clear_cache
@@ -582,6 +598,9 @@ def run_autogpt(goal, username, password, target_username, cache):
 
 if __name__ == "__main__":
 
+    # Start the scheduling
+    schedule_do_nothing()
+        
 
 ######## All in one prompt (works/commented for now because i dont want it to run alone on the server)
     
