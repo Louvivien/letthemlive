@@ -17,8 +17,8 @@ const PostsProgressBar = ({ count,title }) => {
         <div className='post-title'>{title}</div>
         <div className='posts-count'>{count} posts</div>
       </div>
-      <div className="progress progress-bar-container" >
-        <div className="progress-bar" role="progressbar" aria-valuenow={`${progressPrecentage}` } 
+      <div class="progress progress-bar-container" >
+        <div class="progress-bar" role="progressbar" aria-valuenow={`${progressPrecentage}` } 
           aria-valuemin="0" aria-valuemax="100" style={{width:`${progressPrecentage}%`}}>
         </div>
       </div>

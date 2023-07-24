@@ -1,12 +1,8 @@
 import React,{useState} from 'react'
-import { useNavigate } from 'react-router-dom';
-
+import { Link, useNavigate } from "react-router-dom";
 import "./LoginForm.css"
 
 const LoginForm = () => {
-
-  const navigate = useNavigate();
-
 
     const [userDetails, setuserDetails] = useState({
         email:"",
@@ -23,11 +19,8 @@ const LoginForm = () => {
         setuserDetails((prev)=>({...prev,[e.target.name]:e.target.value}));
     }
 
-    const handleLogin = (e) => {
-      e.preventDefault();
-      // Add your login logic here
-      // If login is successful, navigate to the dashboard
-      navigate('/dashboard');
+    const handleLogin=(e)=>{
+        e.preventDefault();
     }
   return (
     <div className='register-form-container'>
@@ -37,7 +30,7 @@ const LoginForm = () => {
         <button className='signup-social-btn'>
         <img src='images/google.png' className='signup-icons' />
             <span className='social-heading'>
-            Signin with Google
+            Sign in with Google
             </span>
             
         </button>
@@ -45,13 +38,13 @@ const LoginForm = () => {
         <button className='signup-social-btn'>
         <img src='images/facebook.png' className='signup-icons' />
             <span className='social-heading'>
-            Signin with Facebook
+            Sign in with Facebook
             </span>
         </button>
         </div>
        
       </div>
-      <h5 className='option-register'>--OR--</h5>
+      <h5 className='option-register'>-- OR --</h5>
       <form onSubmit={handleLogin}>
         <div>
           <input
@@ -100,10 +93,10 @@ const LoginForm = () => {
     
     </div>
 
-        <button type="submit" className='btn btn-primary register-btn'>Sign In</button>
+        <button type="submit" className='btn btn-primary register-btn'>Sign in</button>
       </form>
       <div>
-        <span className='have-acc'>Don't have an account? <a>Register Now</a></span>
+        <span className='have-acc'>Don't have an account? <Link to="/register">Sign up Now</Link></span>
       </div>
 
     </div>

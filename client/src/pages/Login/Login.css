@@ -13,7 +13,7 @@ body, html {
   .left-side {
     width: 70%;
     height: 100vh;
-    background-image: url('/images/register.png'); /* Replace with your image path */
+    background-image: url('../../../public/images/register.png'); /* Replace with your image path */
     background-size: cover;
     background-position: center;
   }

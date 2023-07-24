@@ -1,11 +1,8 @@
 import React,{useState} from 'react'
-import { useNavigate } from 'react-router-dom';
-
 import "./RegisterForm.css"
+import { Link, useNavigate } from "react-router-dom";
 
 const RegisterForm = () => {
-
-    const navigate = useNavigate();
 
     const [userDetails, setuserDetails] = useState({
         fullName:"",
@@ -15,10 +12,7 @@ const RegisterForm = () => {
     })
 
     const handleRegister=(e)=>{
-      e.preventDefault();
-      // Add your registrer logic here
-      // If register is successful, navigate to the dashboard
-      navigate('/dashboard');
+        e.preventDefault();
     }
 
     const handleChange=(e)=>{
@@ -32,7 +26,7 @@ const RegisterForm = () => {
         <button className='signup-social-btn'>
         <img src='images/google.png' className='signup-icons' />
             <span className='social-heading'>
-            Signup with Google
+            Sign up with Google
             </span>
             
         </button>
@@ -40,13 +34,13 @@ const RegisterForm = () => {
         <button className='signup-social-btn'>
         <img src='images/facebook.png' className='signup-icons' />
             <span className='social-heading'>
-            Signup with Facebook
+            Sign up with Facebook
             </span>
         </button>
         </div>
        
       </div>
-      <h5 className='option-register'>--OR--</h5>
+      <h5 className='option-register'>-- OR --</h5>
       <form onSubmit={handleRegister}>
         <div className=''>
           <input
@@ -100,7 +94,7 @@ const RegisterForm = () => {
         <button type="submit" className='btn btn-primary register-btn'>Create Account</button>
       </form>
       <div>
-        <span className='have-acc'>Already Have an account?<a>Login</a></span>
+        <span className='have-acc'>Already Have an account? <Link to="/login">Log in</Link></span>
       </div>
 
     </div>
