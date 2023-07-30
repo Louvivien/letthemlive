@@ -123,7 +123,13 @@ def login():
     # If login successful, store user information in session
     session['logged_in'] = True
     session['email'] = email
-    return jsonify({'message': 'Login successful.'}), 200
+    return jsonify({
+        'message': 'Login successful.',
+        'user': {
+            'fullname': user.get('fullname', ''), # Return user's full name
+            'avatar': user.get('avatar', '') # Return user's avatar image URL
+        }
+    }), 200
 
 
 @app.route('/logout', methods=['POST'])
@@ -172,6 +178,38 @@ def fetch_influencers():
     influencers = list(influencers_collection.find({'user_email': email}, {'_id': 0}))
 
     return jsonify({'influencers': influencers}), 200
+
+
+@app.route('/update-profile', methods=['POST'])
+def update_profile():
+    if 'email' not in session:
+        return jsonify({'error': 'User is not logged in.'}), 401
+
+    data = request.get_json()
+    email = session['email']
+    new_email = data.get('new_email')
+    new_fullname = data.get('new_fullname')
+    new_password = data.get('new_password')
+    new_avatar = data.get('new_avatar')
+
+    user = users_collection.find_one({'email': email})
+    if not user:
+        return jsonify({'error': 'User not found.'}), 404
+
+    if new_email:
+        user['email'] = new_email
+        session['email'] = new_email
+    if new_fullname:
+        user['fullname'] = new_fullname
+    if new_password:
+        user['password'] = generate_password_hash(new_password)
+    if new_avatar:
+        user['avatar'] = new_avatar
+
+    users_collection.update_one({'email': email}, {'$set': user})
+
+    return jsonify({'message': 'Profile updated successfully.'}), 200
+
 
 
 ## Routes for frontend

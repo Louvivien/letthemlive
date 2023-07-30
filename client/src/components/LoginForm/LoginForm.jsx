@@ -1,7 +1,8 @@
-import React,{useState} from 'react'
+import React,{useState, useContext} from 'react' 
 import { Link, useNavigate } from "react-router-dom";
 import "./LoginForm.css"
 import axios from 'axios'; 
+import UserContext from '../../context/UserContext'; 
 
 
 const LoginForm = () => {
@@ -15,6 +16,7 @@ const LoginForm = () => {
 
 
     const navigate = useNavigate(); 
+    const { setUser } = useContext(UserContext); 
 
 
     const handleCheckboxChange = () => {
@@ -37,6 +39,13 @@ const LoginForm = () => {
           if (response.data.message === 'Login successful.') {
               sessionStorage.setItem('logged_in', true);
               sessionStorage.setItem('email', userDetails.email);
+              sessionStorage.setItem('fullname', response.data.user.fullname); // Store user's full name in session
+              sessionStorage.setItem('avatar', response.data.user.avatar); // Store user's avatar image URL in session
+              setUser({ 
+                email: userDetails.email, 
+                fullname: response.data.user.fullname, // Set user's full name in context
+                avatar: response.data.user.avatar // Set user's avatar image URL in context
+              });
               navigate('/dashboard'); 
           }
       } catch (error) {
@@ -49,7 +58,7 @@ const LoginForm = () => {
           }
       }
     }
-
+    
 
   return (
     <div className='register-form-container'>
