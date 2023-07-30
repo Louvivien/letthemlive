@@ -29,6 +29,13 @@ import threading
 import random
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
+from urllib.parse import quote_plus
+
+
+
+
+
+
 
 
 # Load .env file
@@ -42,7 +49,31 @@ load_env()
 username = os.getenv('INSTA_USERNAME')
 password = os.getenv('INSTA_PASSWORD')
 target_username = os.getenv('TARGET_USERNAME')
-db_host = os.getenv('DB_HOST')
+
+# Get MongoDB connection string and password from environment variables
+db_host_original = os.getenv('DB_HOST')
+db_password = os.getenv('DB_PASSWORD')
+
+# URL-encode the password
+db_password_encoded = quote_plus(db_password)
+
+# Replace <password> placeholder in the connection string with the URL-encoded password
+db_host = db_host_original.replace("<password>", db_password_encoded)
+
+# setup mongoDB connection
+client = MongoClient(db_host)
+
+# Check if connected to MongoDB
+try:
+    # The ismaster command is cheap and does not require auth.
+    client.admin.command('ismaster')
+    print("Connected to MongoDB")
+except ConnectionError:
+    print("Failed to connect to MongoDB")
+
+db = client['letthemlive']
+users_collection = db['users']
+
 
 
 # Set up Flask server and Cache
@@ -53,11 +84,6 @@ cache = Cache(app, config={
         'CACHE_TYPE': 'redis',
         'CACHE_REDIS_URL': os.getenv('CACHE_REDIS_URL')
     })
-
-# setup mongoDB connection
-client = MongoClient(db_host)
-db = client['letthemlive']
-users_collection = db['users']
 
 
 @app.route('/signup', methods=['POST'])
