@@ -21,12 +21,14 @@ from pydantic import BaseModel, Field, root_validator
 import faiss
 from datetime import datetime, timedelta
 import random
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request, jsonify, session
 from flask_cors import CORS
 
 from flask_caching import Cache
 import threading
 import random
+from pymongo import MongoClient
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # Load .env file
@@ -40,15 +42,111 @@ load_env()
 username = os.getenv('INSTA_USERNAME')
 password = os.getenv('INSTA_PASSWORD')
 target_username = os.getenv('TARGET_USERNAME')
+db_host = os.getenv('DB_HOST')
 
 
 # Set up Flask server and Cache
 app = Flask(__name__, static_folder=os.path.abspath("./client/build"))
+app.config['SECRET_KEY'] = 'random_key_for_now'
 CORS(app)
 cache = Cache(app, config={
         'CACHE_TYPE': 'redis',
         'CACHE_REDIS_URL': os.getenv('CACHE_REDIS_URL')
     })
+
+# setup mongoDB connection
+client = MongoClient(db_host)
+db = client['letthemlive']
+users_collection = db['users']
+
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+    email = data.get('email')
+    fullname = data.get('fullname')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({'error': 'email and password are required.'}), 400
+
+    user = users_collection.find_one({'email': email})
+    if user:
+        return jsonify({'error': 'email already exists. Please try logging in.'}), 400
+
+    hashed_password = generate_password_hash(password)
+    new_user = {'email': email, 'password': hashed_password, 'fullname': fullname}
+    users_collection.insert_one(new_user)
+
+    return jsonify({'message': 'Signup successful.'}), 201
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({'error': 'email and password are required.'}), 400
+
+    user = users_collection.find_one({'email': email})
+    if not user or not check_password_hash(user['password'], password):
+        return jsonify({'error': 'Invalid email or password.'}), 401
+
+    # If login successful, store user information in session
+    session['logged_in'] = True
+    session['email'] = email
+    return jsonify({'message': 'Login successful.'}), 200
+
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({'message': 'Logout successful.'}), 200
+
+
+
+@app.route('/create_influencer', methods=['POST'])
+def create_influencer():
+    if not session.get('logged_in'):
+        return jsonify({'error': 'You must log in first.'}), 401
+
+    data = request.get_json()
+    full_name = data.get('full_name')
+    insta_username = data.get('insta_username')
+    insta_password = data.get('insta_password')
+    gender = data.get('gender')
+    description = data.get('description')
+
+    influencer = {
+        'user_email': session['email'],
+        'full_name': full_name,
+        'insta_username': insta_username,
+        'insta_password': insta_password,
+        'gender': gender,
+        'description': description,
+        # TODO fetch total no of posts and followers of this user from insta and store it
+        'total_posts': 0,
+        'total_followers': 0
+    }
+
+    influencers_collection = db['influencers']
+    influencers_collection.insert_one(influencer)
+
+    return jsonify({'message': 'Virtual influencer created successfully.'}), 201
+
+@app.route('/fetch_influencers', methods=['GET'])
+def fetch_influencers():
+    if not session.get('logged_in'):
+        return jsonify({'error': 'You must log in first.'}), 401
+
+    email = session['email']
+    influencers_collection = db['influencers']
+    influencers = list(influencers_collection.find({'user_email': email}, {'_id': 0}))
+
+    return jsonify({'influencers': influencers}), 200
+
 
 ## Routes for frontend
 @app.route('/api')
