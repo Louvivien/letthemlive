@@ -1,9 +1,6 @@
-import React,{useState, useContext} from 'react' 
+import React,{useState} from 'react'
 import { Link, useNavigate } from "react-router-dom";
 import "./LoginForm.css"
-import axios from 'axios'; 
-import UserContext from '../../context/UserContext'; 
-
 
 const LoginForm = () => {
 
@@ -12,12 +9,6 @@ const LoginForm = () => {
         password:""
     })
     const [isChecked, setIsChecked] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-
-
-    const navigate = useNavigate(); 
-    const { setUser } = useContext(UserContext); 
-
 
     const handleCheckboxChange = () => {
       setIsChecked((prevValue) => !prevValue);
@@ -28,38 +19,9 @@ const LoginForm = () => {
         setuserDetails((prev)=>({...prev,[e.target.name]:e.target.value}));
     }
 
-    const handleLogin= async (e)=>{
-      e.preventDefault();
-    
-      // Send a post request to the server
-      try {
-          const response = await axios.post(process.env.REACT_APP_BASE_URL + '/login', userDetails);
-          console.log(response.data); // Log the response from the server
-          // If login successful, store user information in session
-          if (response.data.message === 'Login successful.') {
-              sessionStorage.setItem('logged_in', true);
-              sessionStorage.setItem('email', userDetails.email);
-              sessionStorage.setItem('fullname', response.data.user.fullname); // Store user's full name in session
-              sessionStorage.setItem('avatar', response.data.user.avatar); // Store user's avatar image URL in session
-              setUser({ 
-                email: userDetails.email, 
-                fullname: response.data.user.fullname, // Set user's full name in context
-                avatar: response.data.user.avatar // Set user's avatar image URL in context
-              });
-              navigate('/dashboard'); 
-          }
-      } catch (error) {
-          console.error(`Error: ${error}`);
-          // Set the error message
-          if (error.response && error.response.data && error.response.data.message) {
-              setErrorMessage(error.response.data.message);
-          } else {
-              setErrorMessage('No matching user found. Sign up instead?');
-          }
-      }
+    const handleLogin=(e)=>{
+        e.preventDefault();
     }
-    
-
   return (
     <div className='register-form-container'>
       <h5 className='register-main-heading'>Welcome Back!</h5>
@@ -130,9 +92,6 @@ const LoginForm = () => {
             </div>
     
     </div>
-
-    {errorMessage && <p className="error-message">{errorMessage}</p>} 
-
 
         <button type="submit" className='btn btn-primary register-btn'>Sign in</button>
       </form>

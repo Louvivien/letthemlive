@@ -9,7 +9,8 @@ const Login = () => {
 
       <div class="right-side">
         <div className='brand-logo-container'>
-          <p style={{color:"white",marginTop:"20px"}}>letthemtalk</p>
+        <img src="/images/logo512.svg" width={"30rem"} style={{marginRight:"10px"}}/>
+        <p style={{ color: "white", marginTop: "20px" }}>LETTHEMTALK</p>
         </div>
         <div className='register-form-section'>
         <LoginForm/>

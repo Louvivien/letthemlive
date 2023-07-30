@@ -16,7 +16,7 @@ const SideBar = () => {
 
   return (
     <nav className="navbar bg-light sidebar-container">
-      <Link className="navbar-brand text-white">L</Link>
+      <Link className="navbar-brand text-white" to="/dashboard">L</Link>
 
       
       <div style={{ backgroundColor: "black", color: "black", width: "50px", textAlign: "center" }}>
@@ -42,9 +42,9 @@ const SideBar = () => {
           </Link>
         </li>
         <li className="nav-item">
-          <button className="nav-link text-white add-influencer">
+          <Link className="nav-link text-white add-influencer" to="/createInfluencer">
             <FaPlusCircle className='icon' />
-          </button>
+          </Link>
         </li>
         <li className="nav-item">
           <Link className="nav-link text-white" to="/dashboard">
