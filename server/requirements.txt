@@ -15,6 +15,6 @@ flask_caching
 flask
 pydantic
 flask-cors
-
+pymongo
 
 

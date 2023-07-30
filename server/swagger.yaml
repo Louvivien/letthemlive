@@ -1,0 +1,124 @@
+swagger: '2.0'
+info:
+  version: '1.0'
+  title: Virtual Influencer API
+basePath: /v1
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /signup:
+    post:
+      tags:
+        - User
+      summary: User Signup
+      description: Creates a new user account.
+      parameters:
+        - name: body
+          in: body
+          description: User information for signup.
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                example: john.doe@gmail.com
+              fullname:
+                type: string
+                example: john doe
+              password:
+                type: string
+                example: password123
+      responses:
+        '201':
+          description: Signup successful.
+        '400':
+          description: Bad request - Username and password are required.
+
+  /login:
+    post:
+      tags:
+        - User
+      summary: User Login
+      description: Logs in a user and creates a session.
+      parameters:
+        - name: body
+          in: body
+          description: User login credentials.
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                example: john.doe@gmail.com
+              password:
+                type: string
+                example: password123
+      responses:
+        '200':
+          description: Login successful.
+        '401':
+          description: Unauthorized - Invalid username or password.
+
+  /logout:
+    post:
+      tags:
+        - User
+      summary: User Logout
+      description: Logs out the user and clears the session.
+      responses:
+        '200':
+          description: Logout successful.
+
+  /create_influencer:
+    post:
+      tags:
+        - Virtual Influencer
+      summary: Create Virtual Influencer
+      description: Creates a new virtual influencer associated with the logged-in user.
+      parameters:
+        - name: body
+          in: body
+          description: Virtual influencer information.
+          required: true
+          schema:
+            type: object
+            properties:
+              full_name:
+                type: string
+                example: John Doe
+              insta_username:
+                type: string
+                example: johndoe_influencer
+              insta_password:
+                type: string
+                example: password123
+              gender:
+                type: string
+                example: Male
+              description:
+                type: string
+                example: Fashion and lifestyle influencer.
+      responses:
+        '201':
+          description: Virtual influencer created successfully.
+        '401':
+          description: Unauthorized - You must log in first.
+
+  /fetch_influencers:
+    get:
+      tags:
+        - Virtual Influencer
+      summary: Fetch All Virtual Influencers
+      description: Fetches information about all virtual influencers associated with the logged-in user.
+      responses:
+        '200':
+          description: Successfully retrieved virtual influencers.
+        '401':
+          description: Unauthorized - You must log in first.
