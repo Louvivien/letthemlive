@@ -13,7 +13,7 @@ from langchain.tools.file_management.read import ReadFileTool
 from langchain.vectorstores import FAISS
 from langchain.docstore import InMemoryDocstore
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.experimental import AutoGPT
+from langchain_experimental import AutoGPT
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 from typing import Any, Dict, Optional
