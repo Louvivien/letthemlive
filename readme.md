@@ -19,6 +19,8 @@
     <a href="https://github.com/Louvivien/letthemlive/issues">Report Bug</a>
     ·
     <a href="https://github.com/Louvivien/letthemlive/issues">Request Feature</a>
+        ·
+    <a href="https://discord.gg/e3sZ2wxWR2">Join our Discord</a>
   </p>
 </p>
 
