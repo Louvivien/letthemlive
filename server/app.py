@@ -66,12 +66,6 @@ else:
     db_host = db_host_original.replace("<password>", db_password_encoded)
 
 
-# URL-encode the password
-db_password_encoded = quote_plus(db_password)
-
-# Replace <password> placeholder in the connection string with the URL-encoded password
-db_host = db_host_original.replace("<password>", db_password_encoded)
-
 # setup mongoDB connection
 client = MongoClient(db_host)
 
