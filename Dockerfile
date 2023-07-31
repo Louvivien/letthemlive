@@ -15,7 +15,8 @@ WORKDIR /app
 # Install Python dependencies
 COPY server/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --upgrade langchain 
+RUN pip install -U langchain langchain_experimental
+ 
 
 # Copy the Flask server
 COPY server/ ./
