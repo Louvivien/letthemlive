@@ -1,19 +1,17 @@
-import React, { useContext } from 'react'
-import UserContext from '../../context/UserContext'; 
+import React from 'react'
 import "./loggedInUser.css"
-
-const LoggedInUser = () => { // Renamed from loggedInUser to LoggedInUser
-  const { user } = useContext(UserContext); // extract user from context
-
+const loggedInUser = () => {
+  // extract name and image from api
   return (
     <div className='loggedin-container'>
-      <h5 className='text-center'>Hello, {user.fullname}</h5> {/* Display user's full name */}
+      <h5 className='text-center'>Hello</h5>
       <div>
-      <img src={user.avatar || '/images/loggedInImage.png'} className='loggedin-img'/> {/* Display user's avatar image or default image */}
+      <img src='/images/loggedInImage.png' className='loggedin-img'/>
       <div className='Online-dot'></div>
       </div>
+      
     </div>
   )
 }
 
-export default LoggedInUser 
+export default loggedInUser
