@@ -4,6 +4,7 @@ gunicorn
 python-dotenv
 instagrapi
 langchain
+langchain_experimental
 faiss-cpu
 lark
 google-search-results
