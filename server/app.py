@@ -54,6 +54,18 @@ target_username = os.getenv('TARGET_USERNAME')
 db_host_original = os.getenv('DB_HOST')
 db_password = os.getenv('DB_PASSWORD')
 
+# Check if db_password is None
+if db_password is None:
+    print("DB_PASSWORD is not set in the environment variables.")
+    # Handle this situation as needed, e.g., by setting a default password, raising an error, etc.
+else:
+    # URL-encode the password
+    db_password_encoded = quote_plus(db_password)
+
+    # Replace <password> placeholder in the connection string with the URL-encoded password
+    db_host = db_host_original.replace("<password>", db_password_encoded)
+
+
 # URL-encode the password
 db_password_encoded = quote_plus(db_password)
 
