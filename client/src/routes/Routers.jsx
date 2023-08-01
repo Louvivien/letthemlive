@@ -6,6 +6,7 @@ import Register from "../pages/Register/Register.jsx";
 import Dashboard from "../pages/Dashboard/Dashboard.jsx";
 import LandingPage from "../pages/LandingPage/LandingPage.jsx";
 import Auth from "../pages/Auth/Auth.jsx";
+import CreateInfluencer from "../pages/CreateInfluencer/CreateInfluencer.jsx";
 
 
 
@@ -24,6 +25,7 @@ const Routers = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/" element={<LandingPage />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/createInfluencer" element={<CreateInfluencer />} />
     </Routes>
   );
 }

@@ -1,0 +1,62 @@
+*{
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+}
+body{
+    background-color: rgb(244, 244, 244) !important;
+}
+
+
+
+.create_influencer_form_container{
+    background-color: white;
+    /* display: inline-block; */
+    padding: 50px;
+    /* width: 500px;
+    height: 500px; */
+    /* max-width: 500px; */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    border-radius: 10px;
+    /* border: 2px solid red; */
+
+}
+
+.input_field{
+     width: 20vw;
+}
+
+
+
+.input_field_create_influencer{
+    padding: 6px;
+    /* width: 300px; */
+    margin: 10px;
+    border-bottom: 1px solid black;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+
+}
+
+.input_field_create_influencer:focus{
+    outline: none;
+}
+
+.input_field_create_influencer::placeholder{
+    color: rgb(17, 17, 17);
+    font-size: 13px;
+}
+
+.add_influencer_btn{
+    margin-top: 20px;
+    /* margin-bottom: 10px; */
+    width: 300px;
+}
+.create_influencer_main_heading{
+    font-size: 30px;
+    font-family: var(--font-dm-sans);
+  }

@@ -1,6 +1,5 @@
 import React,{useState} from 'react'
 import "./RegisterForm.css"
-import Axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 
 const RegisterForm = () => {
@@ -12,41 +11,9 @@ const RegisterForm = () => {
         confirmPassword:""
     })
 
-    const [errorMessage, setErrorMessage] = useState(''); 
-
-    const navigate = useNavigate();
-
-
-    const handleRegister= async (e)=>{
-      e.preventDefault();
-
-    // Check if passwords match
-    if (userDetails.password !== userDetails.confirmPassword) {
-      setErrorMessage("Passwords do not match!"); // Set the error message
-      return;
-  }
-
-      // Send a post request to the server
-      try {
-        const response = await Axios.post(`${process.env.REACT_APP_BASE_URL}/signup`, {
-            email: userDetails.email,
-            password: userDetails.password,
-            fullname: userDetails.fullName
-        });
-        console.log(response.data); 
-        if (response.data.message === 'Signup successful.') {
-            navigate('/dashboard'); 
-          }
-        } catch (error) {
-            console.error(`Error: ${error}`);
-            // Set the error message
-            if (error.response && error.response.data && error.response.data.message) {
-                setErrorMessage(error.response.data.message);
-            } else {
-                setErrorMessage('Error signing up. Please try again later.');
-            }
-        }
-      }
+    const handleRegister=(e)=>{
+        e.preventDefault();
+    }
 
     const handleChange=(e)=>{
         setuserDetails((prev)=>({...prev,[e.target.name]:e.target.value}));
@@ -124,9 +91,6 @@ const RegisterForm = () => {
             required
           />
         </div>
-
-        {errorMessage && <p className="error-message">{errorMessage}</p>} 
-
         <button type="submit" className='btn btn-primary register-btn'>Create Account</button>
       </form>
       <div>

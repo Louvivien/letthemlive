@@ -5,6 +5,7 @@ const LandingImages = () => {
   return (
     <div className='d-flex container flex-wrap align-items-center justify-content-center'>
       <div className='brand-logo-container'>
+      <img src="/images/logo512.svg" width={"30rem"} style={{marginRight:"10px"}}/>
         <p style={{ color: "white", marginTop: "20px" }}>LETTHEMTALK</p>
       </div>
       <div className='left-container'>
