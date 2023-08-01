@@ -13,7 +13,7 @@ from langchain.tools.file_management.read import ReadFileTool
 from langchain.vectorstores import FAISS
 from langchain.docstore import InMemoryDocstore
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.experimental import AutoGPT
+from langchain_experimental.autonomous_agents import AutoGPT
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 from typing import Any, Dict, Optional
@@ -54,11 +54,17 @@ target_username = os.getenv('TARGET_USERNAME')
 db_host_original = os.getenv('DB_HOST')
 db_password = os.getenv('DB_PASSWORD')
 
-# URL-encode the password
-db_password_encoded = quote_plus(db_password)
+# Check if db_password is None
+if db_password is None:
+    print("DB_PASSWORD is not set in the environment variables.")
+    # Handle this situation as needed, e.g., by setting a default password, raising an error, etc.
+else:
+    # URL-encode the password
+    db_password_encoded = quote_plus(db_password)
 
-# Replace <password> placeholder in the connection string with the URL-encoded password
-db_host = db_host_original.replace("<password>", db_password_encoded)
+    # Replace <password> placeholder in the connection string with the URL-encoded password
+    db_host = db_host_original.replace("<password>", db_password_encoded)
+
 
 # setup mongoDB connection
 client = MongoClient(db_host)
@@ -766,12 +772,12 @@ if __name__ == "__main__":
 
 ######## All in one prompt (works/commented for now because i dont want it to run alone on the server)
     
-    # # Set the goal for AutoGPT
-    # goal = "'I want to engage with my Instagram followers. Firstly, I aim to send a message to a specific user. Before sending the message, I will check if I have any previous conversations with this user. If there is an existing conversation, I will verify its stage to see if I have already sent a message. If a message has been sent, I will patiently wait for their response before sending another one.\n\nOnce I receive a reply, I will continue the conversation with the user. I will also regularly check for any new responses and respond promptly. Engaging in a meaningful and respectful conversation is a priority.\n\nWhile having a conversation or after, when waiting for a reply, I would like to search for 5 profiles related to my interests (do this only once) and follow them to expand my network.\n\nNext, I will retrieve the 2 most recent posts from the users (do this only once) I am following and actively like those posts to show appreciation and support.\n\nLastly, I intend to leave thoughtful comments on those posts (do this only once) to foster a sense of community and connection with my followers.'"
+    # Set the goal for AutoGPT
+    goal = "'I want to engage with my Instagram followers. Firstly, I aim to send a message to a specific user. Before sending the message, I will check if I have any previous conversations with this user. If there is an existing conversation, I will verify its stage to see if I have already sent a message. If a message has been sent, I will patiently wait for their response before sending another one.\n\nOnce I receive a reply, I will continue the conversation with the user. I will also regularly check for any new responses and respond promptly. Engaging in a meaningful and respectful conversation is a priority.\n\nWhile having a conversation or after, when waiting for a reply, I would like to search for 5 profiles related to my interests (do this only once) and follow them to expand my network.\n\nNext, I will retrieve the 2 most recent posts from the users (do this only once) I am following and actively like those posts to show appreciation and support.\n\nLastly, I intend to leave thoughtful comments on those posts (do this only once) to foster a sense of community and connection with my followers. I will patiently wait for the response for the discussion'"
 
-    # # Create a thread for AutoGPT
-    # autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
-    # autogpt_thread.start()
+    # Create a thread for AutoGPT
+    autogpt_thread = threading.Thread(target=run_autogpt, args=(goal, username, password, target_username, cache))
+    autogpt_thread.start()
 
 
 
