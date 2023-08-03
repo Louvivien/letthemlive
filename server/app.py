@@ -748,13 +748,13 @@ def run_autogpt(goal, username, password, target_username, cache):
     embedding_size = 1536
     index = faiss.IndexFlatL2(embedding_size)
     vectorstore = FAISS(embeddings_model.embed_query, index, InMemoryDocstore({}), {})
-
+    #Use Model gpt-4 because gpt-3.5 don't follow well the system message and generated "" empty input
     # Langchain: set up model and AutoGPT
     agent = AutoGPT.from_llm_and_tools(
         ai_name=ai_name,
         ai_role=ai_role,
         tools=tools,
-        llm=ChatOpenAI(temperature=0),
+        llm=ChatOpenAI(model="gpt-4",temperature=0.5),
         memory=vectorstore.as_retriever()
        )
     agent.chain.verbose = True
